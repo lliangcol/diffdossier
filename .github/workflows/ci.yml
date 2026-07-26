@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: "1.25.12"
+  GOTOOLCHAIN: local
+  GOWORK: "off"
+  GOFLAGS: -mod=readonly
+
+jobs:
+  dco:
+    name: DCO
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify pull request commit sign-offs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+          while IFS= read -r commit; do
+            if ! git show -s --format=%B "$commit" | grep -Eq '^Signed-off-by: .+ <[^<>]+>$'; then
+              echo "::error::Commit $commit is missing a Signed-off-by trailer"
+              failed=1
+            fi
+          done < <(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA")
+          exit "$failed"
+
+  quality:
+    name: Quality and cross-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: Check formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' files < <(git ls-files -z '*.go')
+          unformatted="$(gofmt -l "${files[@]}")"
+          if [[ -n "$unformatted" ]]; then
+            printf 'Unformatted Go files:\n%s\n' "$unformatted"
+            exit 1
+          fi
+      - name: Vet
+        run: go vet ./...
+      - name: Validate published schemas
+        run: go test -count=1 ./pkg/schema
+      - name: Cross-build supported targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/diffdossier-cross"
+          mkdir -p "$output"
+          for target in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64 windows/arm64; do
+            goos="${target%/*}"
+            goarch="${target#*/}"
+            suffix=""
+            if [[ "$goos" == windows ]]; then suffix=".exe"; fi
+            CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" \
+              go build -trimpath -o "$output/diffdossier-$goos-$goarch$suffix" ./cmd/diffdossier
+          done
+
+  native:
+    name: Native (${{ matrix.label }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux-amd64
+            runner: ubuntu-24.04
+            race: true
+          - label: windows-amd64
+            runner: windows-2025
+            race: true
+          - label: macos-amd64
+            runner: macos-15-intel
+            race: true
+          - label: macos-arm64
+            runner: macos-15
+            race: true
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: Test
+        run: go test -count=1 ./...
+      - name: Race test
+        if: matrix.race
+        run: go test -race -count=1 ./...
+      - name: Platform compatibility spike
+        run: go run ./spikes/platform
+      - name: CLI version smoke
+        run: go run ./cmd/diffdossier version --json
+      - name: Read-only doctor smoke
+        run: go run ./cmd/diffdossier doctor --repo . --config diffdossier.example.toml --json

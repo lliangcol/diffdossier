@@ -6,10 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"path/filepath"
 
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
-	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/store"
 	publicschema "github.com/lliangcol/diffdossier/pkg/schema"
 )
@@ -31,15 +29,8 @@ func runRecover(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return ExitEvidence
 	}
-	stateRoot := *stateFlag
-	if stateRoot == "" {
-		paths, pathErr := platform.DefaultPaths()
-		if pathErr != nil {
-			return ExitInternal
-		}
-		stateRoot = paths.StateDir
-	}
-	if !filepath.IsAbs(stateRoot) || requireOutsideRepository(repo.Root, stateRoot) != nil {
+	stateRoot, err := resolveStateRoot(*stateFlag)
+	if err != nil || requireOutsideRepository(repo.Root, stateRoot) != nil {
 		return ExitUsage
 	}
 	stateStore, err := store.Open(stateRoot)

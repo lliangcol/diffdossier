@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
@@ -21,7 +22,8 @@ func TestCaptureSeparatesScopesAndSpecialPaths(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "tracked.txt"), []byte("unstaged\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"space name.txt", "中文-🙂.txt", "line\nbreak.txt"} {
+	specialPaths := inventoryFixturePaths(runtime.GOOS)
+	for _, name := range specialPaths {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte(name), 0o600); err != nil {
 			t.Fatal(err)
 		}
@@ -45,8 +47,27 @@ func TestCaptureSeparatesScopesAndSpecialPaths(t *testing.T) {
 			t.Fatalf("missing path identity or content hash: %+v", entry)
 		}
 	}
-	if counts[ScopeStaged] != 1 || counts[ScopeUnstaged] != 1 || counts[ScopeUntracked] != 3 {
+	if counts[ScopeStaged] != 1 || counts[ScopeUnstaged] != 1 || counts[ScopeUntracked] != len(specialPaths) {
 		t.Fatalf("unexpected scope counts: %#v", counts)
+	}
+}
+
+func inventoryFixturePaths(goos string) []string {
+	paths := []string{"space name.txt", "中文-🙂.txt"}
+	if goos != "windows" {
+		paths = append(paths, "line\nbreak.txt")
+	}
+	return paths
+}
+
+func TestInventoryFixturePathsRespectOperatingSystemRules(t *testing.T) {
+	for _, name := range inventoryFixturePaths("windows") {
+		if strings.ContainsAny(name, "\t\n\r") {
+			t.Fatalf("Windows fixture contains a forbidden control character: %q", name)
+		}
+	}
+	if len(inventoryFixturePaths("linux")) != len(inventoryFixturePaths("windows"))+1 {
+		t.Fatal("POSIX fixture must retain newline path coverage")
 	}
 }
 
@@ -137,9 +158,7 @@ func TestCaptureRenameDeleteBinaryAndSymlink(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "binary.bin"), []byte{0, 1, 2}, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Symlink("renamed.txt", filepath.Join(dir, "link")); err != nil {
-		t.Skipf("symlink unavailable: %v", err)
-	}
+	symlinkAvailable := os.Symlink("renamed.txt", filepath.Join(dir, "link")) == nil
 	run(t, dir, "git", "add", "-A")
 	run(t, dir, "git", "commit", "-qm", "change")
 	repo, _ := gitrepo.Open(context.Background(), dir)
@@ -154,8 +173,11 @@ func TestCaptureRenameDeleteBinaryAndSymlink(t *testing.T) {
 		seenBinary = seenBinary || entry.Kind == "binary"
 		seenLink = seenLink || entry.Kind == "symlink"
 	}
-	if !seenRename || !seenBinary || !seenLink {
+	if !seenRename || !seenBinary || (symlinkAvailable && !seenLink) {
 		t.Fatalf("rename=%v binary=%v symlink=%v entries=%+v", seenRename, seenBinary, seenLink, result.Entries)
+	}
+	if !symlinkAvailable {
+		t.Log("symlink creation is unavailable on this host; rename and binary coverage still ran")
 	}
 }
 

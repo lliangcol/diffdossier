@@ -43,6 +43,47 @@ func TestPrepareWritesStateOutsideRepository(t *testing.T) {
 	}
 }
 
+func TestPrepareUsesEnvironmentPathsAndEffectiveConfigChangesGoStale(t *testing.T) {
+	repo := initializedRepo(t)
+	configPath := filepath.Join(t.TempDir(), "selected.toml")
+	if err := os.WriteFile(configPath, []byte("baseline = \"HEAD\"\ninclude_untracked = true\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	state := filepath.Join(t.TempDir(), "state")
+	t.Setenv("DIFFDOSSIER_CONFIG", configPath)
+	t.Setenv("DIFFDOSSIER_STATE_DIR", state)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"prepare", "--repo", repo, "--json"}, &stdout, &stderr); code != ExitOK {
+		t.Fatalf("prepare code=%d stderr=%s", code, stderr.String())
+	}
+	if err := os.WriteFile(configPath, []byte("baseline = \"HEAD\"\ninclude_untracked = false\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := Run([]string{"plan", "--repo", repo, "--json"}, &stdout, &stderr); code != ExitStale {
+		t.Fatalf("plan code=%d want=%d stdout=%s stderr=%s", code, ExitStale, stdout.String(), stderr.String())
+	}
+}
+
+func TestBaselineFlagMustBeRepeatedAcrossFreshnessChecks(t *testing.T) {
+	repo := initializedRepo(t)
+	configPath := filepath.Join(t.TempDir(), "without-baseline.toml")
+	if err := os.WriteFile(configPath, []byte("schema_version = 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	state := filepath.Join(t.TempDir(), "state")
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"prepare", "--repo", repo, "--config", configPath, "--baseline", "HEAD", "--state-dir", state, "--json"}, &stdout, &stderr); code != ExitOK {
+		t.Fatalf("prepare code=%d stderr=%s", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := Run([]string{"plan", "--repo", repo, "--config", configPath, "--baseline", "HEAD", "--state-dir", state, "--json"}, &stdout, &stderr); code != ExitOK {
+		t.Fatalf("plan code=%d stderr=%s", code, stderr.String())
+	}
+}
+
 func runGit(t *testing.T, dir string, args ...string) {
 	t.Helper()
 	command := exec.Command("git", args...)

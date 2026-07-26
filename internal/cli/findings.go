@@ -10,9 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lliangcol/diffdossier/internal/config"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
-	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/snapshot"
 	"github.com/lliangcol/diffdossier/internal/store"
 	"github.com/lliangcol/diffdossier/internal/workflow"
@@ -27,30 +25,20 @@ type mutableRunContext struct {
 	request    snapshot.Request
 }
 
-func loadMutableRun(repoPath, configPath, stateRoot, runID string) (mutableRunContext, error) {
+func loadMutableRun(repoPath, configPath, baseline, stateRoot, runID string) (mutableRunContext, error) {
 	ctx := context.Background()
 	repo, err := gitrepo.Open(ctx, repoPath)
 	if err != nil {
 		return mutableRunContext{}, err
 	}
-	if configPath == "" {
-		configPath = filepath.Join(repo.Root, "diffdossier.toml")
-	} else if !filepath.IsAbs(configPath) {
-		configPath = filepath.Join(repo.Root, configPath)
-	}
-	cfg, err := config.Load(configPath)
+	effective, err := loadEffectiveConfig(repo.Root, configPath, baseline)
 	if err != nil {
 		return mutableRunContext{}, err
 	}
-	if stateRoot == "" {
-		paths, pathErr := platform.DefaultPaths()
-		if pathErr != nil {
-			return mutableRunContext{}, pathErr
-		}
-		stateRoot = paths.StateDir
-	}
-	if !filepath.IsAbs(stateRoot) {
-		return mutableRunContext{}, errors.New("state-dir must be absolute")
+	cfg := effective.Config
+	stateRoot, err = resolveStateRoot(stateRoot)
+	if err != nil {
+		return mutableRunContext{}, err
 	}
 	if err := requireOutsideRepository(repo.Root, stateRoot); err != nil {
 		return mutableRunContext{}, err
@@ -74,7 +62,7 @@ func loadMutableRun(repoPath, configPath, stateRoot, runID string) (mutableRunCo
 	if err != nil {
 		return mutableRunContext{}, err
 	}
-	digests, err := semanticDigests(repo, configPath, cfg.Risk.PolicyFiles)
+	digests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return mutableRunContext{}, err
 	}
@@ -99,6 +87,7 @@ func runFinding(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	repo := flags.String("repo", ".", "target Git repository")
 	configPath := flags.String("config", "", "configuration file")
+	baseline := flags.String("baseline", "", "exact local baseline ref override")
 	state := flags.String("state-dir", "", "durable state directory")
 	runID := flags.String("run-id", "", "run ID")
 	findingID := flags.String("finding-id", "", "finding ID")
@@ -113,7 +102,7 @@ func runFinding(args []string, stdout, stderr io.Writer) int {
 	} else if err != nil || flags.NArg() != 0 || *findingID == "" || *operator == "" {
 		return ExitUsage
 	}
-	context, err := loadMutableRun(*repo, *configPath, *state, *runID)
+	context, err := loadMutableRun(*repo, *configPath, *baseline, *state, *runID)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_WORKFLOW_CONTEXT", err.Error()), ExitStale)
 	}
@@ -162,6 +151,7 @@ func runFix(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	repo := flags.String("repo", ".", "target Git repository")
 	configPath := flags.String("config", "", "configuration file")
+	baseline := flags.String("baseline", "", "exact local baseline ref override")
 	state := flags.String("state-dir", "", "durable state directory")
 	runID := flags.String("run-id", "", "run ID")
 	idsRaw := flags.String("finding-ids", "", "comma-separated exact finding IDs")
@@ -178,7 +168,7 @@ func runFix(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return ExitUsage
 	}
-	context, err := loadMutableRun(*repo, *configPath, *state, *runID)
+	context, err := loadMutableRun(*repo, *configPath, *baseline, *state, *runID)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_WORKFLOW_CONTEXT", err.Error()), ExitStale)
 	}

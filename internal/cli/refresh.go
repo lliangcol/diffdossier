@@ -12,11 +12,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/lliangcol/diffdossier/internal/config"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
 	"github.com/lliangcol/diffdossier/internal/inventory"
 	"github.com/lliangcol/diffdossier/internal/planner"
-	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/snapshot"
 	"github.com/lliangcol/diffdossier/internal/store"
 	"github.com/lliangcol/diffdossier/internal/workflow"
@@ -28,6 +26,7 @@ func runRefresh(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	repoFlag := flags.String("repo", ".", "target Git repository")
 	configFlag := flags.String("config", "", "configuration file")
+	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
 	runFlag := flags.String("run-id", "", "FIX_AUTHORIZED run ID")
 	jsonOutput := flags.Bool("json", false, "emit stable JSON")
@@ -41,25 +40,13 @@ func runRefresh(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return ExitEvidence
 	}
-	configPath := *configFlag
-	if configPath == "" {
-		configPath = filepath.Join(repo.Root, "diffdossier.toml")
-	} else if !filepath.IsAbs(configPath) {
-		configPath = filepath.Join(repo.Root, configPath)
-	}
-	cfg, err := config.Load(configPath)
+	effective, err := loadEffectiveConfig(repo.Root, *configFlag, *baselineFlag)
 	if err != nil {
 		return ExitUsage
 	}
-	stateRoot := *stateFlag
-	if stateRoot == "" {
-		paths, pathErr := platform.DefaultPaths()
-		if pathErr != nil {
-			return ExitInternal
-		}
-		stateRoot = paths.StateDir
-	}
-	if !filepath.IsAbs(stateRoot) {
+	cfg := effective.Config
+	stateRoot, err := resolveStateRoot(*stateFlag)
+	if err != nil {
 		return ExitUsage
 	}
 	stateStore, err := store.Open(stateRoot)
@@ -93,7 +80,7 @@ func runRefresh(args []string, stdout, stderr io.Writer) int {
 	if err := stateStore.ReadRunJSON(oldRunDir, "plan.json", &oldPlan); err != nil {
 		return ExitEvidence
 	}
-	digests, err := semanticDigests(repo, configPath, cfg.Risk.PolicyFiles)
+	digests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return ExitEvidence
 	}

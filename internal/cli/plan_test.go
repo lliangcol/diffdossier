@@ -129,6 +129,24 @@ func TestRecordTaskRejectsStaleSnapshotBeforeImport(t *testing.T) {
 	}
 }
 
+func TestPacketTaskRejectsStaleSnapshotBeforeDisclosure(t *testing.T) {
+	repo, state, runDir := plannedFixture(t)
+	taskPaths, _ := filepath.Glob(filepath.Join(runDir, "tasks", "*.json"))
+	var task planner.Task
+	readFixtureJSON(t, taskPaths[0], &task)
+	if err := os.WriteFile(filepath.Join(repo, "reviewed.txt"), []byte("mutated\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"packet", "task", "--repo", repo, "--state-dir", state,
+		"--task-id", task.ID, "--json",
+	}, &stdout, &stderr)
+	if code != ExitStale || !bytes.Contains(stdout.Bytes(), []byte("DD_SNAPSHOT_STALE")) {
+		t.Fatalf("code=%d stderr=%s stdout=%s", code, stderr.String(), stdout.String())
+	}
+}
+
 func TestRecordTaskRejectsTamperedPlanBeforeImport(t *testing.T) {
 	repo, state, runDir := plannedFixture(t)
 	taskPaths, _ := filepath.Glob(filepath.Join(runDir, "tasks", "*.json"))

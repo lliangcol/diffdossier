@@ -8,12 +8,10 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/lliangcol/diffdossier/internal/config"
 	"github.com/lliangcol/diffdossier/internal/contracts"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
 	"github.com/lliangcol/diffdossier/internal/packets"
 	"github.com/lliangcol/diffdossier/internal/planner"
-	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/risk"
 	"github.com/lliangcol/diffdossier/internal/snapshot"
 	"github.com/lliangcol/diffdossier/internal/store"
@@ -25,6 +23,7 @@ func runPlan(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	repoFlag := flags.String("repo", ".", "target Git repository")
 	configFlag := flags.String("config", "", "configuration file")
+	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
 	runFlag := flags.String("run-id", "", "prepared run ID (default: latest)")
 	jsonOutput := flags.Bool("json", false, "emit stable JSON")
@@ -38,25 +37,13 @@ func runPlan(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_GIT_REPOSITORY", err.Error()), ExitEvidence)
 	}
-	configPath := *configFlag
-	if configPath == "" {
-		configPath = filepath.Join(repo.Root, "diffdossier.toml")
-	} else if !filepath.IsAbs(configPath) {
-		configPath = filepath.Join(repo.Root, configPath)
-	}
-	cfg, err := config.Load(configPath)
+	effective, err := loadEffectiveConfig(repo.Root, *configFlag, *baselineFlag)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_CONFIG_INVALID", err.Error()), ExitUsage)
 	}
-	stateRoot := *stateFlag
-	if stateRoot == "" {
-		paths, pathErr := platform.DefaultPaths()
-		if pathErr != nil {
-			return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_PLATFORM_PATHS", pathErr.Error()), ExitInternal)
-		}
-		stateRoot = paths.StateDir
-	}
-	if !filepath.IsAbs(stateRoot) {
+	cfg := effective.Config
+	stateRoot, err := resolveStateRoot(*stateFlag)
+	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_USAGE_INVALID_PATH", "state-dir must be absolute"), ExitUsage)
 	}
 	if err := requireOutsideRepository(repo.Root, stateRoot); err != nil {
@@ -85,7 +72,7 @@ func runPlan(args []string, stdout, stderr io.Writer) int {
 	if run.State != "PREPARED" {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_WORKFLOW_STATE", "plan requires PREPARED run"), ExitIncomplete)
 	}
-	digests, err := semanticDigests(repo, configPath, cfg.Risk.PolicyFiles)
+	digests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_EVIDENCE_DIGEST", err.Error()), ExitEvidence)
 	}

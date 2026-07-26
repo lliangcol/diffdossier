@@ -6,12 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"path/filepath"
 	"time"
 
-	"github.com/lliangcol/diffdossier/internal/config"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
-	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/store"
 	publicschema "github.com/lliangcol/diffdossier/pkg/schema"
 )
@@ -65,6 +62,7 @@ func runGCPlan(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	repoFlag := flags.String("repo", ".", "target Git repository")
 	configFlag := flags.String("config", "", "configuration file")
+	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
 	asOfFlag := flags.String("as-of", "", "exact RFC3339 cutoff anchor (default: now)")
 	jsonOutput := flags.Bool("json", false, "emit stable JSON")
@@ -77,16 +75,11 @@ func runGCPlan(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_GIT_REPOSITORY", err.Error()), ExitEvidence)
 	}
-	configPath := *configFlag
-	if configPath == "" {
-		configPath = filepath.Join(repo.Root, "diffdossier.toml")
-	} else if !filepath.IsAbs(configPath) {
-		configPath = filepath.Join(repo.Root, configPath)
-	}
-	cfg, err := config.Load(configPath)
+	effective, err := loadEffectiveConfig(repo.Root, *configFlag, *baselineFlag)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_CONFIG_INVALID", err.Error()), ExitUsage)
 	}
+	cfg := effective.Config
 	stateRoot, err := resolveStateRoot(*stateFlag)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_USAGE_INVALID_PATH", err.Error()), ExitUsage)
@@ -150,18 +143,4 @@ func runGCExecute(args []string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintf(stdout, "GC executed: %d runs, %d blobs (%s)\n", execution.RemovedRuns, execution.RemovedBlobs, execution.PlanDigest)
 	return ExitOK
-}
-
-func resolveStateRoot(stateRoot string) (string, error) {
-	if stateRoot == "" {
-		paths, err := platform.DefaultPaths()
-		if err != nil {
-			return "", err
-		}
-		stateRoot = paths.StateDir
-	}
-	if !filepath.IsAbs(stateRoot) {
-		return "", errors.New("state-dir must be absolute")
-	}
-	return filepath.Clean(stateRoot), nil
 }
