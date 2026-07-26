@@ -32,6 +32,8 @@ func runPrepare(args []string, stdout, stderr io.Writer) int {
 	configFlag := flags.String("config", "", "configuration file")
 	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
+	dataClassFlag := flags.String("data-class", string(publicschema.PrivateProject), "run data classification: private_project, public_synthetic, or public_project")
+	publicRevisionFlag := flags.String("public-revision", "", "exact public HEAD commit required for public_project")
 	jsonOutput := flags.Bool("json", false, "emit stable JSON")
 	if err := flags.Parse(args); errors.Is(err, flag.ErrHelp) {
 		return ExitOK
@@ -66,6 +68,17 @@ func runPrepare(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_SNAPSHOT_CAPTURE", err.Error()), ExitEvidence)
 	}
+	dataClass := publicschema.DataClass(*dataClassFlag)
+	if dataClass != publicschema.PrivateProject && dataClass != publicschema.PublicSynthetic && dataClass != publicschema.PublicProject {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_DATA_CLASS_INVALID", "data-class must be private_project, public_synthetic, or public_project"), ExitUsage)
+	}
+	if dataClass == publicschema.PublicProject {
+		if *publicRevisionFlag == "" || *publicRevisionFlag != seal.Revisions.HeadCommit {
+			return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_PUBLIC_REVISION_REQUIRED", "public_project requires --public-revision equal to the captured HEAD commit"), ExitBlocked)
+		}
+	} else if *publicRevisionFlag != "" {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_PUBLIC_REVISION_INVALID", "--public-revision is only valid with public_project"), ExitUsage)
+	}
 	afterDigests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_EVIDENCE_DIGEST", err.Error()), ExitEvidence)
@@ -81,7 +94,7 @@ func runPrepare(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_STATE_REGISTER", err.Error()), ExitEvidence)
 	}
-	run, runDir, err := stateStore.BeginRun(repository, seal)
+	run, runDir, err := stateStore.BeginClassifiedRun(repository, seal, dataClass)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_STATE_RUN", err.Error()), ExitEvidence)
 	}
@@ -89,6 +102,7 @@ func runPrepare(args []string, stdout, stderr io.Writer) int {
 		"repository_id": repository.ID, "run_id": run.ID, "snapshot_id": seal.SnapshotID,
 		"state": run.State, "state_path": runDir, "freshness": seal.Revisions.Freshness,
 		"path_count": len(seal.Inventory.Entries),
+		"data_class": run.DataClass,
 	}
 	if *jsonOutput {
 		return writeJSON(stdout, stderr, publicschema.Success(result))

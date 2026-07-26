@@ -377,26 +377,37 @@ func buildTarget(repo, output, work, version, commit string, sourceDate time.Tim
 	if err := os.Mkdir(stage, 0o755); err != nil {
 		return artifact, fmt.Errorf("create target stage: %w", err)
 	}
-	binaryName := "diffdossier"
-	if target.OS == "windows" {
-		binaryName += ".exe"
-	}
-	binaryPath := filepath.Join(stage, binaryName)
 	ldflags := fmt.Sprintf("-s -w -X github.com/lliangcol/diffdossier/internal/buildinfo.Version=%s -X github.com/lliangcol/diffdossier/internal/buildinfo.Commit=%s -X github.com/lliangcol/diffdossier/internal/buildinfo.BuildDate=%s", version, commit, sourceDate.Format(time.RFC3339))
-	command := exec.Command("go", "build", "-mod=readonly", "-trimpath", "-buildvcs=false", "-ldflags", ldflags, "-o", binaryPath, "./cmd/diffdossier")
-	command.Dir = repo
-	command.Env = controlledGoEnv(os.Environ(), target)
-	outputBytes, err := command.CombinedOutput()
-	if err != nil {
-		return artifact, fmt.Errorf("build %s/%s: %w: %s", target.OS, target.Arch, err, strings.TrimSpace(string(outputBytes)))
+	for _, binary := range []struct {
+		Name    string
+		Package string
+	}{
+		{Name: "diffdossier", Package: "./cmd/diffdossier"},
+		{Name: "diffdossier-provider", Package: "./cmd/diffdossier-provider"},
+	} {
+		binaryName := binary.Name
+		if target.OS == "windows" {
+			binaryName += ".exe"
+		}
+		command := exec.Command("go", "build", "-mod=readonly", "-trimpath", "-buildvcs=false", "-ldflags", ldflags, "-o", filepath.Join(stage, binaryName), binary.Package)
+		command.Dir = repo
+		command.Env = controlledGoEnv(os.Environ(), target)
+		outputBytes, err := command.CombinedOutput()
+		if err != nil {
+			return artifact, fmt.Errorf("build %s for %s/%s: %w: %s", binary.Name, target.OS, target.Arch, err, strings.TrimSpace(string(outputBytes)))
+		}
 	}
 	for _, name := range []string{"LICENSE", "NOTICE", "README.md"} {
 		if err := copyFile(filepath.Join(repo, name), filepath.Join(stage, name), 0o644); err != nil {
 			return artifact, err
 		}
 	}
+	if err := copyFile(filepath.Join(repo, "schemas", "review-result.schema.json"), filepath.Join(stage, "review-result.schema.json"), 0o644); err != nil {
+		return artifact, err
+	}
 	archiveName := base + "." + target.Format
 	archivePath := filepath.Join(output, archiveName)
+	var err error
 	if target.Format == "zip" {
 		err = writeZip(archivePath, stage, base, sourceDate)
 	} else {
@@ -458,13 +469,13 @@ func writeTarGz(path, stage, base string, modTime time.Time) error {
 	gz.Header.ModTime = time.Unix(0, 0).UTC()
 	gz.Header.OS = 255
 	tarWriter := tar.NewWriter(gz)
-	for _, name := range []string{"LICENSE", "NOTICE", "README.md", "diffdossier"} {
+	for _, name := range []string{"LICENSE", "NOTICE", "README.md", "review-result.schema.json", "diffdossier", "diffdossier-provider"} {
 		data, err := os.ReadFile(filepath.Join(stage, name))
 		if err != nil {
 			return err
 		}
 		mode := int64(0o644)
-		if name == "diffdossier" {
+		if name == "diffdossier" || name == "diffdossier-provider" {
 			mode = 0o755
 		}
 		header := &tar.Header{Name: base + "/" + name, Mode: mode, Size: int64(len(data)), ModTime: modTime, AccessTime: time.Time{}, ChangeTime: time.Time{}, Uid: 0, Gid: 0, Typeflag: tar.TypeReg, Format: tar.FormatPAX}
@@ -491,14 +502,14 @@ func writeZip(path, stage, base string, modTime time.Time) error {
 	}
 	defer file.Close()
 	writer := zip.NewWriter(file)
-	for _, name := range []string{"LICENSE", "NOTICE", "README.md", "diffdossier.exe"} {
+	for _, name := range []string{"LICENSE", "NOTICE", "README.md", "review-result.schema.json", "diffdossier.exe", "diffdossier-provider.exe"} {
 		data, err := os.ReadFile(filepath.Join(stage, name))
 		if err != nil {
 			return err
 		}
 		header := &zip.FileHeader{Name: base + "/" + name, Method: zip.Deflate}
 		header.SetModTime(modTime)
-		if name == "diffdossier.exe" {
+		if name == "diffdossier.exe" || name == "diffdossier-provider.exe" {
 			header.SetMode(0o755)
 		} else {
 			header.SetMode(0o644)

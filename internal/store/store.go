@@ -17,6 +17,7 @@ import (
 
 	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/snapshot"
+	publicschema "github.com/lliangcol/diffdossier/pkg/schema"
 )
 
 type Store struct {
@@ -32,13 +33,14 @@ type Repository struct {
 }
 
 type Run struct {
-	SchemaVersion string    `json:"schema_version"`
-	ID            string    `json:"run_id"`
-	RepositoryID  string    `json:"repository_id"`
-	SnapshotID    string    `json:"snapshot_id"`
-	State         string    `json:"state"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	SchemaVersion string                 `json:"schema_version"`
+	ID            string                 `json:"run_id"`
+	RepositoryID  string                 `json:"repository_id"`
+	SnapshotID    string                 `json:"snapshot_id"`
+	DataClass     publicschema.DataClass `json:"data_class"`
+	State         string                 `json:"state"`
+	CreatedAt     time.Time              `json:"created_at"`
+	UpdatedAt     time.Time              `json:"updated_at"`
 }
 
 type Event struct {
@@ -124,6 +126,15 @@ func (store *Store) Register(localRoot string) (Repository, error) {
 }
 
 func (store *Store) BeginRun(repository Repository, seal snapshot.Seal) (Run, string, error) {
+	return store.BeginClassifiedRun(repository, seal, publicschema.PrivateProject)
+}
+
+// BeginClassifiedRun binds the operator-selected data classification before
+// any review packet can be created.
+func (store *Store) BeginClassifiedRun(repository Repository, seal snapshot.Seal, dataClass publicschema.DataClass) (Run, string, error) {
+	if !validRunDataClass(dataClass) {
+		return Run{}, "", errors.New("run data_class must be public_synthetic, public_project, or private_project")
+	}
 	gcLock, err := acquire(filepath.Join(store.Root, "locks", "gc.lock"))
 	if err != nil {
 		return Run{}, "", err
@@ -145,7 +156,7 @@ func (store *Store) BeginRun(repository Repository, seal snapshot.Seal) (Run, st
 	now := time.Now().UTC()
 	run := Run{
 		SchemaVersion: "1.0", ID: id, RepositoryID: repository.ID,
-		SnapshotID: seal.SnapshotID, State: "PREPARED", CreatedAt: now, UpdatedAt: now,
+		SnapshotID: seal.SnapshotID, DataClass: dataClass, State: "PREPARED", CreatedAt: now, UpdatedAt: now,
 	}
 	if err := atomicJSON(filepath.Join(runDir, "run.json"), run); err != nil {
 		return Run{}, "", err
@@ -168,7 +179,7 @@ func (store *Store) BeginRun(repository Repository, seal snapshot.Seal) (Run, st
 			}
 		}
 	}
-	if _, err := store.AppendEvent(runDir, "run_prepared", map[string]string{"snapshot_id": seal.SnapshotID}); err != nil {
+	if _, err := store.AppendEvent(runDir, "run_prepared", map[string]string{"snapshot_id": seal.SnapshotID, "data_class": string(dataClass)}); err != nil {
 		return Run{}, "", err
 	}
 	return run, runDir, nil
@@ -198,7 +209,14 @@ func (store *Store) LoadRun(repositoryID, runID string) (Run, snapshot.Seal, err
 	if run.SnapshotID != seal.SnapshotID {
 		return Run{}, snapshot.Seal{}, errors.New("run and snapshot identifiers do not match")
 	}
+	if !validRunDataClass(run.DataClass) {
+		return Run{}, snapshot.Seal{}, errors.New("run contains an invalid data_class")
+	}
 	return run, seal, nil
+}
+
+func validRunDataClass(dataClass publicschema.DataClass) bool {
+	return dataClass == publicschema.PublicSynthetic || dataClass == publicschema.PublicProject || dataClass == publicschema.PrivateProject
 }
 
 func (store *Store) writeBlob(digest string, content []byte) error {
@@ -467,7 +485,7 @@ func VerifyEventChain(runDir string) error {
 }
 
 func VerifyRunJournal(runDir string, run Run) error {
-	derived, err := runJournalState(runDir, run.SnapshotID)
+	derived, err := runJournalState(runDir, run.SnapshotID, run.DataClass)
 	if err != nil {
 		return err
 	}
@@ -477,7 +495,7 @@ func VerifyRunJournal(runDir string, run Run) error {
 	return nil
 }
 
-func runJournalState(runDir, snapshotID string) (string, error) {
+func runJournalState(runDir, snapshotID string, dataClass publicschema.DataClass) (string, error) {
 	file, err := os.Open(filepath.Join(runDir, "events.jsonl"))
 	if err != nil {
 		return "", err
@@ -496,8 +514,8 @@ func runJournalState(runDir, snapshotID string) (string, error) {
 				return "", errors.New("event journal must begin with run_prepared")
 			}
 			var payload map[string]string
-			if err := json.Unmarshal(event.Payload, &payload); err != nil || payload["snapshot_id"] != snapshotID {
-				return "", errors.New("run_prepared does not bind the run snapshot")
+			if err := json.Unmarshal(event.Payload, &payload); err != nil || payload["snapshot_id"] != snapshotID || payload["data_class"] != string(dataClass) {
+				return "", errors.New("run_prepared does not bind the run snapshot and data_class")
 			}
 			derived = "PREPARED"
 			first = false
@@ -550,7 +568,7 @@ func (store *Store) RecoverRun(repositoryID, runID, expectedJournalState string)
 	if err := VerifyEventChain(runDir); err != nil {
 		return Run{}, err
 	}
-	derived, err := runJournalState(runDir, run.SnapshotID)
+	derived, err := runJournalState(runDir, run.SnapshotID, run.DataClass)
 	if err != nil {
 		return Run{}, err
 	}

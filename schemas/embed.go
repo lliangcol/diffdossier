@@ -30,3 +30,8 @@ func Digests() (map[string]string, error) {
 	}
 	return result, nil
 }
+
+// Read returns an embedded public schema by its repository filename.
+func Read(name string) ([]byte, error) {
+	return files.ReadFile(name)
+}

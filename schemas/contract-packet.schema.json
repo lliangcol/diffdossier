@@ -6,7 +6,7 @@
   "properties": {
     "schema_version": {"const": "1.0"},
     "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
-    "data_class": {"const": "private_project"},
+    "data_class": {"enum": ["public_synthetic", "public_project", "private_project"]},
     "prompt": {"type": "string", "minLength": 1},
     "prompt_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
     "input_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},

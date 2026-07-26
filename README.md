@@ -19,9 +19,10 @@ public release, stable CLI, or Tier 1 platform support is claimed yet.
   content-bound retention plans. Public prepare/approve/create/revoke commands
   exist behind separate exact G-12 plan echoes and remain zero-action by
   default.
-- The internal Provider boundary includes model-free manual/mock implementations
-  and an authorization-gated argv-only command protocol. No automatic Codex or
-  Claude Code adapter is published.
+- The Provider boundary includes model-free manual/mock implementations, an
+  authorization-gated argv-only command protocol, and a separately packaged
+  `diffdossier-provider` adapter for Codex and API-key-only Claude Code. Every
+  automatic call remains an explicit, content-bound opt-in.
 - The compatibility spike uses only the Go standard library and the local Git executable.
 - Project-defined Gate execution requires an exact, one-run plan digest and a
   separate shell-mode acknowledgement. No automatic fix, remote write/CI
@@ -51,7 +52,7 @@ go run ./cmd/diffdossier doctor --repo . --json
 # diffdossier.toml. The baseline must be explicit and locally resolvable.
 go run ./cmd/diffdossier init --repo /absolute/repository --baseline refs/remotes/origin/main --json
 go run ./cmd/diffdossier config validate --repo . --config diffdossier.example.toml --json
-go run ./cmd/diffdossier prepare --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
+go run ./cmd/diffdossier prepare --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --data-class private_project --json
 go run ./cmd/diffdossier plan --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
 go run ./cmd/diffdossier record task --repo . --state-dir /absolute/private/state --task-id task-... --result /absolute/result.json --json
 go run ./cmd/diffdossier gates plan --repo . --state-dir /absolute/private/state --json

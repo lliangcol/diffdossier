@@ -120,7 +120,7 @@ func runPlan(args []string, stdout, stderr io.Writer) int {
 		if err := stateStore.WriteRunJSON(runDir, filepath.Join("tasks", task.ID+".json"), task); err != nil {
 			return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_STATE_WRITE", err.Error()), ExitEvidence)
 		}
-		packet, packetErr := packets.Build(task, publicschema.PrivateProject)
+		packet, packetErr := packets.Build(task, run.DataClass)
 		if packetErr != nil {
 			return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_PACKET_BUILD", packetErr.Error()), ExitEvidence)
 		}
