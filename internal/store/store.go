@@ -23,6 +23,8 @@ type Store struct {
 	Root string
 }
 
+var ErrRunArchived = errors.New("run is archived and read-only")
+
 type Repository struct {
 	ID        string    `json:"repository_id"`
 	LocalRoot string    `json:"local_root"`
@@ -64,7 +66,14 @@ func Open(root string) (*Store, error) {
 	if err := platform.EnsurePrivateDir(root); err != nil {
 		return nil, fmt.Errorf("prepare state root: %w", err)
 	}
-	for _, relative := range []string{"repositories", filepath.Join("blobs", "sha256")} {
+	for _, relative := range []string{
+		"repositories",
+		filepath.Join("blobs", "sha256"),
+		"locks",
+		filepath.Join("gc", "plans"),
+		filepath.Join("gc", "executions"),
+		filepath.Join("gc", "trash"),
+	} {
 		if err := platform.EnsurePrivateDir(filepath.Join(root, relative)); err != nil {
 			return nil, err
 		}
@@ -115,6 +124,12 @@ func (store *Store) Register(localRoot string) (Repository, error) {
 }
 
 func (store *Store) BeginRun(repository Repository, seal snapshot.Seal) (Run, string, error) {
+	gcLock, err := acquire(filepath.Join(store.Root, "locks", "gc.lock"))
+	if err != nil {
+		return Run{}, "", err
+	}
+	defer gcLock.Release()
+
 	id, err := randomID("run-", 12)
 	if err != nil {
 		return Run{}, "", err
@@ -161,6 +176,11 @@ func (store *Store) BeginRun(repository Repository, seal snapshot.Seal) (Run, st
 
 func (store *Store) LoadRun(repositoryID, runID string) (Run, snapshot.Seal, error) {
 	runDir := filepath.Join(store.Root, "repositories", repositoryID, "runs", runID)
+	if _, err := os.Lstat(filepath.Join(runDir, "archive.json")); err == nil {
+		return Run{}, snapshot.Seal{}, ErrRunArchived
+	} else if !os.IsNotExist(err) {
+		return Run{}, snapshot.Seal{}, err
+	}
 	var run Run
 	if err := readJSON(filepath.Join(runDir, "run.json"), &run); err != nil {
 		return Run{}, snapshot.Seal{}, err
@@ -200,6 +220,29 @@ func (store *Store) writeBlob(digest string, content []byte) error {
 	return atomicBytes(path, content)
 }
 
+func (store *Store) ReadBlob(digest string) ([]byte, error) {
+	if !validDigest(digest) {
+		return nil, errors.New("invalid blob digest")
+	}
+	path := filepath.Join(store.Root, "blobs", "sha256", strings.TrimPrefix(digest, "sha256:"))
+	info, err := os.Lstat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, errors.New("blob is not a regular file")
+	}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	actual := sha256.Sum256(content)
+	if "sha256:"+hex.EncodeToString(actual[:]) != digest {
+		return nil, errors.New("blob content does not match digest")
+	}
+	return content, nil
+}
+
 func (store *Store) LatestRun(repositoryID string) (Run, error) {
 	pattern := filepath.Join(store.Root, "repositories", repositoryID, "runs", "*", "run.json")
 	paths, err := filepath.Glob(pattern)
@@ -210,14 +253,24 @@ func (store *Store) LatestRun(repositoryID string) (Run, error) {
 		return Run{}, errors.New("no runs found")
 	}
 	var latest Run
+	found := false
 	for _, path := range paths {
+		if _, err := os.Lstat(filepath.Join(filepath.Dir(path), "archive.json")); err == nil {
+			continue
+		} else if !os.IsNotExist(err) {
+			return Run{}, err
+		}
 		var candidate Run
 		if err := readJSON(path, &candidate); err != nil {
 			return Run{}, err
 		}
 		if candidate.UpdatedAt.After(latest.UpdatedAt) {
 			latest = candidate
+			found = true
 		}
+	}
+	if !found {
+		return Run{}, errors.New("no active runs found")
 	}
 	return latest, nil
 }
@@ -230,6 +283,9 @@ func (store *Store) RunDir(repositoryID, runID string) (string, error) {
 }
 
 func (store *Store) WriteRunJSON(runDir, relative string, value any) error {
+	if err := ensureRunMutable(runDir); err != nil {
+		return err
+	}
 	target, err := runArtifactPath(runDir, relative)
 	if err != nil {
 		return err
@@ -238,6 +294,9 @@ func (store *Store) WriteRunJSON(runDir, relative string, value any) error {
 }
 
 func (store *Store) WriteRunBytes(runDir, relative string, content []byte) error {
+	if err := ensureRunMutable(runDir); err != nil {
+		return err
+	}
 	target, err := runArtifactPath(runDir, relative)
 	if err != nil {
 		return err
@@ -251,6 +310,27 @@ func (store *Store) ReadRunJSON(runDir, relative string, target any) error {
 		return err
 	}
 	return readJSON(path, target)
+}
+
+func (store *Store) RemoveRunArtifact(runDir, relative string) error {
+	if err := ensureRunMutable(runDir); err != nil {
+		return err
+	}
+	target, err := runArtifactPath(runDir, relative)
+	if err != nil {
+		return err
+	}
+	info, err := os.Lstat(target)
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() {
+		return errors.New("run artifact is not a regular file")
+	}
+	if err := os.Remove(target); err != nil {
+		return err
+	}
+	return syncDirectory(filepath.Dir(target))
 }
 
 func runArtifactPath(runDir, relative string) (string, error) {
@@ -277,6 +357,9 @@ func (store *Store) UpdateRunState(runDir, next string) (Run, error) {
 
 // UpdateRunStateHeld advances state while the caller owns the run write lock.
 func (store *Store) UpdateRunStateHeld(runDir, next string, lock *Lock) (Run, error) {
+	if err := ensureRunMutable(runDir); err != nil {
+		return Run{}, err
+	}
 	expectedLock := filepath.Join(runDir, "locks", "write.lock")
 	if lock == nil || lock.file == nil || filepath.Clean(lock.path) != filepath.Clean(expectedLock) {
 		return Run{}, errors.New("valid run write lock is required")
@@ -301,6 +384,9 @@ func (store *Store) UpdateRunStateHeld(runDir, next string, lock *Lock) (Run, er
 }
 
 func (store *Store) AppendEvent(runDir, eventType string, payload any) (Event, error) {
+	if err := ensureRunMutable(runDir); err != nil {
+		return Event{}, err
+	}
 	lock, err := acquire(filepath.Join(runDir, "locks", "events.lock"))
 	if err != nil {
 		return Event{}, err
@@ -679,4 +765,13 @@ func allowedTransition(current, next string) bool {
 		"BLOCKED":        {"PREPARED": true, "REVIEWING": true},
 	}
 	return allowed[current][next]
+}
+
+func ensureRunMutable(runDir string) error {
+	if _, err := os.Lstat(filepath.Join(runDir, "archive.json")); err == nil {
+		return ErrRunArchived
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	return nil
 }

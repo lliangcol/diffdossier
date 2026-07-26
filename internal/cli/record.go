@@ -29,8 +29,11 @@ import (
 )
 
 func runRecord(args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 && args[0] == "contract" {
+		return runPlan(args[1:], stdout, stderr)
+	}
 	if len(args) == 0 || args[0] != "task" {
-		fmt.Fprintln(stderr, "usage: diffdossier record task --task-id ID --result PATH [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+		fmt.Fprintln(stderr, "usage: diffdossier record contract ... | diffdossier record task --task-id ID --result PATH ...")
 		return ExitUsage
 	}
 	flags := flag.NewFlagSet("record task", flag.ContinueOnError)

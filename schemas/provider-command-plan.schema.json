@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/provider-command-plan.schema.json",
+  "type": "object",
+  "required": ["provider", "executable", "argv", "working_dir", "environment_value_digests", "timeout_milliseconds", "max_stdout_bytes", "max_stderr_bytes", "data_class", "network_destination_class", "credential_source", "redaction_digest", "input_bytes", "strong_os_sandbox", "execution_plan_digest", "binary_digest", "trust_candidate", "egress_request"],
+  "properties": {
+    "provider": {"const": "command"},
+    "executable": {"type": "string", "minLength": 1},
+    "argv": {"type": "array", "items": {"type": "string"}},
+    "working_dir": {"type": "string", "minLength": 1},
+    "environment_value_digests": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}},
+    "timeout_milliseconds": {"type": "integer", "minimum": 1},
+    "max_stdout_bytes": {"type": "integer", "minimum": 1},
+    "max_stderr_bytes": {"type": "integer", "minimum": 1},
+    "data_class": {"enum": ["public_synthetic", "public_project", "private_project"]},
+    "network_destination_class": {"enum": ["none", "local", "external", "unknown"]},
+    "credential_source": {"enum": ["none", "environment", "stdin_proxy", "system_credential"]},
+    "redaction_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "input_bytes": {"type": "integer", "minimum": 0},
+    "strong_os_sandbox": {"const": false},
+    "execution_plan_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "binary_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "trust_candidate": {"$ref": "trust-binding.schema.json"},
+    "egress_request": {
+      "type": "object",
+      "required": ["provider", "snapshot_id", "task_input_digest", "data_class", "bytes"],
+      "properties": {
+        "provider": {"const": "command"},
+        "snapshot_id": {"type": "string", "minLength": 1},
+        "task_input_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "data_class": {"enum": ["public_synthetic", "public_project", "private_project"]},
+        "bytes": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

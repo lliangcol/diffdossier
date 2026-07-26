@@ -1,9 +1,13 @@
 # Planning and packet contracts
 
-The plan command operates only on a PREPARED run and first proves that the
-current repository, configuration, rule files, risk policy, public Schemas,
-Prompt, Provider manifest, toolchain, and binary still match its snapshot.
-Stale input exits with code 4 and writes no planned state.
+`packet contract` operates only on a PREPARED run, verifies the snapshot is
+still fresh, and writes a content-bound private contract-review packet.
+`record contract` performs deterministic local contract/risk/task
+construction and advances the run to CONTRACTED; `plan` remains an equivalent
+compatibility entrypoint. Planning first proves that the current repository,
+configuration, rule files, risk policy, public Schemas, Prompt, Provider
+manifest, toolchain, and binary still match its snapshot. Stale input exits
+with code 4 and writes no planned state.
 
 Rule discovery recognizes scoped AGENTS.md and CLAUDE.md files while excluding
 dependency directories. Rules can constrain review but cannot authorize
@@ -25,7 +29,9 @@ deterministic acyclic dependency graph. A single oversized file is retained in
 full by blob reference, marked incomplete, and requires a complete read; it is
 never silently truncated.
 
-The initial packet Provider is manual. Packets are private_project by default,
+`packet task --task-id` revalidates the stored packet against its deterministic
+task before emitting it. The initial packet Provider is manual. Packets are
+private_project by default,
 contain only a fixed untrusted-data Prompt and content-addressed previous and
 current blob references, and do not invoke a model or send bytes outside the
 machine. secret_denied content cannot enter a packet.

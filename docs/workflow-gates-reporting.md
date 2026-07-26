@@ -36,6 +36,12 @@ approval.
 `export portable` creates a deterministic private ZIP outside the target
 repository. It keeps the event chain but excludes locks, logs, trust, and
 approval records so authority is not silently transferred. `export public
-prepare` only materializes a candidate and secret scan in private state. Public
-approval, bundle creation, and revocation require the separate G-12 human gate
-and are deliberately absent from the current CLI.
+prepare` only materializes a candidate and secret scan in private state.
+`approve`, `create`, and `revoke` each have a dry planning call that performs
+no public action and returns a distinct content-bound G-12 plan digest. The
+corresponding `--trust-public-*` echo is required before the private approval,
+public bundle, or append-only tombstone is created. Public bundles contain only
+the approved public/derived content, policy/scan metadata, and the hash of the
+private approval record; they omit approver, repository, run, source path, and
+private approval objects. A tombstone explicitly states that external copies
+cannot be recalled.

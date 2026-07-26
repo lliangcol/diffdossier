@@ -38,3 +38,22 @@ State transitions use the event journal as write-ahead evidence. A crash after
 the transition event but before `run.json` replacement is detected on load;
 `recover --trust-journal-state <STATE>` repairs it only when the operator echoes
 the exact valid journal-derived state. Recovery never guesses a later state.
+
+Terminal runs may be made immutable with `run archive`. The archive record
+binds the repository/run identity, terminal state, final event hash, complete
+regular-file tree digest, pin decision, reason, and timestamp. Archived runs
+are excluded from implicit latest-run selection and normal mutation commands.
+
+`gc` only writes a private dry-run plan. Automatic candidates must be archived
+`EXPORTED` runs older than the configured retention interval. `FINALIZED`
+but unexported runs, blocked/incomplete runs, explicit pins, and runs holding a
+public export/redaction approval, public bundle, or revocation tombstone are
+never selected. Blob removal is global-reference aware, so a blob retained by
+any repository/run survives.
+
+Execution requires `--trust-gc-plan` to exactly match the content-bound plan.
+Immediately before removal, DiffDossier revalidates every archive/event/tree
+digest, eligibility decision, protection marker, and global blob reference
+set. Runs are first renamed into a plan-specific private trash directory;
+execution records make successful retries idempotent. This protects accidental
+retention races and crashes, but it is not a substitute for filesystem backups.

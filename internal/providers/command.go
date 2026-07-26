@@ -30,36 +30,42 @@ var (
 const commandCapability = "provider:command:review"
 
 type CommandConfig struct {
-	RepositoryID   string
-	RepositoryRoot string
-	Executable     string
-	Args           []string
-	WorkingDir     string
-	Env            []string
-	Timeout        time.Duration
-	MaxStdout      int64
-	MaxStderr      int64
-	ConfigDigest   string
-	DataClass      publicschema.DataClass
-	Now            func() time.Time
+	RepositoryID            string
+	RepositoryRoot          string
+	Executable              string
+	Args                    []string
+	WorkingDir              string
+	Env                     []string
+	Timeout                 time.Duration
+	MaxStdout               int64
+	MaxStderr               int64
+	ConfigDigest            string
+	DataClass               publicschema.DataClass
+	NetworkDestinationClass string
+	CredentialSource        string
+	RedactionDigest         string
+	Now                     func() time.Time
 }
 
 type CommandPlan struct {
-	Provider            string                 `json:"provider"`
-	Executable          string                 `json:"executable"`
-	Argv                []string               `json:"argv"`
-	WorkingDir          string                 `json:"working_dir"`
-	Environment         map[string]string      `json:"environment_value_digests"`
-	TimeoutMilliseconds int64                  `json:"timeout_milliseconds"`
-	MaxStdout           int64                  `json:"max_stdout_bytes"`
-	MaxStderr           int64                  `json:"max_stderr_bytes"`
-	DataClass           publicschema.DataClass `json:"data_class"`
-	InputBytes          int64                  `json:"input_bytes"`
-	StrongOSSandbox     bool                   `json:"strong_os_sandbox"`
-	ExecutionPlanDigest string                 `json:"execution_plan_digest"`
-	BinaryDigest        string                 `json:"binary_digest"`
-	TrustCandidate      policy.TrustBinding    `json:"trust_candidate"`
-	EgressRequest       policy.EgressRequest   `json:"egress_request"`
+	Provider                string                 `json:"provider"`
+	Executable              string                 `json:"executable"`
+	Argv                    []string               `json:"argv"`
+	WorkingDir              string                 `json:"working_dir"`
+	Environment             map[string]string      `json:"environment_value_digests"`
+	TimeoutMilliseconds     int64                  `json:"timeout_milliseconds"`
+	MaxStdout               int64                  `json:"max_stdout_bytes"`
+	MaxStderr               int64                  `json:"max_stderr_bytes"`
+	DataClass               publicschema.DataClass `json:"data_class"`
+	NetworkDestinationClass string                 `json:"network_destination_class"`
+	CredentialSource        string                 `json:"credential_source"`
+	RedactionDigest         string                 `json:"redaction_digest"`
+	InputBytes              int64                  `json:"input_bytes"`
+	StrongOSSandbox         bool                   `json:"strong_os_sandbox"`
+	ExecutionPlanDigest     string                 `json:"execution_plan_digest"`
+	BinaryDigest            string                 `json:"binary_digest"`
+	TrustCandidate          policy.TrustBinding    `json:"trust_candidate"`
+	EgressRequest           policy.EgressRequest   `json:"egress_request"`
 }
 
 type Command struct {
@@ -91,6 +97,15 @@ func DescribeCommand(config CommandConfig, packet packets.Packet) (CommandPlan, 
 		config.DataClass != publicschema.PrivateProject {
 		return CommandPlan{}, errors.New("command Provider cannot receive denied or unclassified data")
 	}
+	if !contains([]string{"none", "local", "external", "unknown"}, config.NetworkDestinationClass) {
+		return CommandPlan{}, errors.New("invalid network destination class")
+	}
+	if !contains([]string{"none", "environment", "stdin_proxy", "system_credential"}, config.CredentialSource) {
+		return CommandPlan{}, errors.New("invalid credential source")
+	}
+	if !strings.HasPrefix(config.RedactionDigest, "sha256:") || len(config.RedactionDigest) != len("sha256:")+64 {
+		return CommandPlan{}, errors.New("redaction digest is required")
+	}
 	executable, binaryDigest, err := validateExecutable(config.Executable)
 	if err != nil {
 		return CommandPlan{}, err
@@ -113,23 +128,30 @@ func DescribeCommand(config CommandConfig, packet packets.Packet) (CommandPlan, 
 		WorkingDir: workingDir, Environment: environment,
 		TimeoutMilliseconds: config.Timeout.Milliseconds(), MaxStdout: config.MaxStdout, MaxStderr: config.MaxStderr,
 		DataClass: config.DataClass, InputBytes: int64(len(input)), StrongOSSandbox: false,
-		BinaryDigest: binaryDigest,
+		NetworkDestinationClass: config.NetworkDestinationClass,
+		CredentialSource:        config.CredentialSource,
+		RedactionDigest:         config.RedactionDigest,
+		BinaryDigest:            binaryDigest,
 	}
 	digestInput := struct {
-		Provider            string                 `json:"provider"`
-		Executable          string                 `json:"executable"`
-		Argv                []string               `json:"argv"`
-		WorkingDir          string                 `json:"working_dir"`
-		Environment         map[string]string      `json:"environment_value_digests"`
-		TimeoutMilliseconds int64                  `json:"timeout_milliseconds"`
-		MaxStdout           int64                  `json:"max_stdout_bytes"`
-		MaxStderr           int64                  `json:"max_stderr_bytes"`
-		DataClass           publicschema.DataClass `json:"data_class"`
-		SnapshotID          string                 `json:"snapshot_id"`
-		TaskInputDigest     string                 `json:"task_input_digest"`
-		BinaryDigest        string                 `json:"binary_digest"`
+		Provider                string                 `json:"provider"`
+		Executable              string                 `json:"executable"`
+		Argv                    []string               `json:"argv"`
+		WorkingDir              string                 `json:"working_dir"`
+		Environment             map[string]string      `json:"environment_value_digests"`
+		TimeoutMilliseconds     int64                  `json:"timeout_milliseconds"`
+		MaxStdout               int64                  `json:"max_stdout_bytes"`
+		MaxStderr               int64                  `json:"max_stderr_bytes"`
+		DataClass               publicschema.DataClass `json:"data_class"`
+		NetworkDestinationClass string                 `json:"network_destination_class"`
+		CredentialSource        string                 `json:"credential_source"`
+		RedactionDigest         string                 `json:"redaction_digest"`
+		SnapshotID              string                 `json:"snapshot_id"`
+		TaskInputDigest         string                 `json:"task_input_digest"`
+		BinaryDigest            string                 `json:"binary_digest"`
 	}{plan.Provider, plan.Executable, plan.Argv, plan.WorkingDir, plan.Environment, plan.TimeoutMilliseconds,
-		plan.MaxStdout, plan.MaxStderr, plan.DataClass, packet.SnapshotID, packet.TaskInputHash, plan.BinaryDigest}
+		plan.MaxStdout, plan.MaxStderr, plan.DataClass, plan.NetworkDestinationClass,
+		plan.CredentialSource, plan.RedactionDigest, packet.SnapshotID, packet.TaskInputHash, plan.BinaryDigest}
 	encoded, err := json.Marshal(digestInput)
 	if err != nil {
 		return CommandPlan{}, err
@@ -184,6 +206,9 @@ func (command *Command) Review(ctx context.Context, packet packets.Packet) (resu
 	handshake, err := command.Handshake(ctx)
 	if err != nil {
 		return results.Result{}, err
+	}
+	if command.plan.NetworkDestinationClass == "none" && handshake.NetworkAccess != "none" {
+		return results.Result{}, errors.Join(ErrHandshakeInvalid, errors.New("Provider requires or may use network but execution plan declares none"))
 	}
 	reviewRequest := commandRequest{ProtocolVersion: "1.0", Operation: "review", Packet: &packet}
 	if int64(len(mustJSON(reviewRequest))) > handshake.MaxInputBytes {

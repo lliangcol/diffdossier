@@ -60,6 +60,9 @@ func TestPublicLifecycleExactApprovalAndTombstone(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if bundle.BundleDigest == "" || bundle.Action != "create" {
+		t.Fatalf("bundle binding is incomplete: %+v", bundle)
+	}
 	changed := preparation
 	changed.Candidate.Digest = "changed"
 	if _, err := CreatePublic(changed, approval, nil); err == nil {

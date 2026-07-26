@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/gc-execution.schema.json",
+  "type": "object",
+  "required": ["schema_version", "plan_digest", "executed_at", "removed_runs", "removed_blobs"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "plan_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "executed_at": {"type": "string", "format": "date-time"},
+    "removed_runs": {"type": "integer", "minimum": 0},
+    "removed_blobs": {"type": "integer", "minimum": 0}
+  },
+  "additionalProperties": false
+}

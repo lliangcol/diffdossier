@@ -85,6 +85,15 @@ func TestCommandProviderBinaryReplacementInvalidatesTrust(t *testing.T) {
 	}
 }
 
+func TestCommandProviderNetworkDeclarationCannotExceedPlan(t *testing.T) {
+	config, packet, _ := commandFixture(t, "valid")
+	config.NetworkDestinationClass = "none"
+	command := authorizedCommand(t, config, packet)
+	if _, err := command.Review(context.Background(), packet); !errors.Is(err, ErrHandshakeInvalid) {
+		t.Fatalf("network declaration mismatch was accepted: %v", err)
+	}
+}
+
 func TestCommandProviderRejectsHandshakeTimeoutAndOversize(t *testing.T) {
 	tests := []struct {
 		name string
@@ -193,7 +202,10 @@ func commandFixture(t *testing.T, mode string) (CommandConfig, packets.Packet, s
 		Env:     []string{"GO_WANT_COMMAND_PROVIDER_HELPER=1", "DD_MODE=" + mode, "DD_MARKER=" + marker},
 		Timeout: 2 * time.Second, MaxStdout: 1 << 20, MaxStderr: 1 << 16,
 		ConfigDigest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-		DataClass:    publicschema.PrivateProject, Now: func() time.Time { return now },
+		DataClass:    publicschema.PrivateProject, NetworkDestinationClass: "unknown",
+		CredentialSource: "none",
+		RedactionDigest:  "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+		Now:              func() time.Time { return now },
 	}
 	return config, packet, marker
 }

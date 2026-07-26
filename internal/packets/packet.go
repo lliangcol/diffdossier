@@ -34,6 +34,7 @@ type Packet struct {
 	PromptDigest  string                 `json:"prompt_digest"`
 	Task          planner.Task           `json:"task"`
 	Files         []FileReference        `json:"files"`
+	Blobs         map[string][]byte      `json:"blobs,omitempty"`
 	TotalBytes    int64                  `json:"total_bytes"`
 }
 
@@ -71,6 +72,34 @@ func Build(task planner.Task, dataClass publicschema.DataClass) (Packet, error) 
 	digest := sha256.Sum256(canonical)
 	packet.TaskInputHash = "sha256:" + hex.EncodeToString(digest[:])
 	return packet, nil
+}
+
+func Materialize(packet Packet, load func(string) ([]byte, error)) (Packet, error) {
+	if load == nil {
+		return Packet{}, errors.New("blob loader is required")
+	}
+	materialized := packet
+	materialized.Blobs = map[string][]byte{}
+	for _, file := range packet.Files {
+		for _, digest := range []string{file.CurrentBlob, file.PreviousBlob} {
+			if digest == "" {
+				continue
+			}
+			if _, exists := materialized.Blobs[digest]; exists {
+				continue
+			}
+			content, err := load(digest)
+			if err != nil {
+				return Packet{}, err
+			}
+			actual := sha256.Sum256(content)
+			if "sha256:"+hex.EncodeToString(actual[:]) != digest {
+				return Packet{}, errors.New("materialized blob does not match packet digest")
+			}
+			materialized.Blobs[digest] = content
+		}
+	}
+	return materialized, nil
 }
 
 func DigestPrompt(prompt string) string {

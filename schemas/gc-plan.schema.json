@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/gc-plan.schema.json",
+  "type": "object",
+  "required": ["schema_version", "repository_id", "as_of", "retention_days", "candidates", "blob_digests", "plan_digest"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "repository_id": {"type": "string", "pattern": "^repo-[a-f0-9]{32}$"},
+    "as_of": {"type": "string", "format": "date-time"},
+    "retention_days": {"type": "integer", "minimum": 1},
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["repository_id", "run_id", "archive_digest", "content_digest"],
+        "properties": {
+          "repository_id": {"type": "string", "pattern": "^repo-[a-f0-9]{32}$"},
+          "run_id": {"type": "string", "pattern": "^run-[a-f0-9]{24}$"},
+          "archive_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "content_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "blob_digests": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+    },
+    "plan_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}

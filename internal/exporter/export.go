@@ -144,9 +144,12 @@ type PublicBundle struct {
 	Content              []byte               `json:"content"`
 	ContentDigest        string               `json:"content_digest"`
 	ArtifactClass        policy.ArtifactClass `json:"artifact_class"`
+	Action               string               `json:"action"`
 	PolicyDigest         string               `json:"policy_digest"`
 	ScanDigest           string               `json:"scan_digest"`
+	PublicRevision       string               `json:"public_revision,omitempty"`
 	ApprovalRecordDigest string               `json:"public_export_approval_record_digest"`
+	BundleDigest         string               `json:"bundle_digest"`
 }
 
 func CreatePublic(preparation PublicPreparation, approval policy.PublicApproval, redactionApproval *policy.RedactionApproval) (PublicBundle, error) {
@@ -165,7 +168,28 @@ func CreatePublic(preparation PublicPreparation, approval policy.PublicApproval,
 		}
 	}
 	approvalBytes, _ := json.Marshal(approval)
-	return PublicBundle{SchemaVersion: "1.0", Content: append([]byte(nil), preparation.PreparedContent...), ContentDigest: preparation.Candidate.Digest, ArtifactClass: preparation.Candidate.ArtifactClass, PolicyDigest: preparation.Candidate.PolicyDigest, ScanDigest: preparation.Candidate.ScanDigest, ApprovalRecordDigest: sha(approvalBytes)}, nil
+	bundle := PublicBundle{
+		SchemaVersion: "1.0", Content: append([]byte(nil), preparation.PreparedContent...),
+		ContentDigest: preparation.Candidate.Digest, ArtifactClass: preparation.Candidate.ArtifactClass,
+		Action: preparation.Candidate.Action, PolicyDigest: preparation.Candidate.PolicyDigest,
+		ScanDigest: preparation.Candidate.ScanDigest, PublicRevision: preparation.Candidate.PublicRevision,
+		ApprovalRecordDigest: sha(approvalBytes),
+	}
+	bundle.BundleDigest = digestJSON(bundle)
+	return bundle, nil
+}
+
+func VerifyPublicBundle(bundle PublicBundle) error {
+	claimed := bundle.BundleDigest
+	bundle.BundleDigest = ""
+	if claimed == "" || claimed != digestJSON(bundle) {
+		return errors.New("public bundle integrity is invalid")
+	}
+	if bundle.ContentDigest != sha(bundle.Content) || bundle.Action == "" ||
+		bundle.ApprovalRecordDigest == "" || bundle.PolicyDigest == "" || bundle.ScanDigest == "" {
+		return errors.New("public bundle content binding is invalid")
+	}
+	return nil
 }
 
 type Revocation struct {
@@ -187,6 +211,39 @@ func Revoke(approvalDigest, exportDigest, reason string, now time.Time) (Revocat
 	return value, nil
 }
 
+func PreparationDigest(preparation PublicPreparation) string {
+	return digestJSON(struct {
+		SchemaVersion string                 `json:"schema_version"`
+		Candidate     policy.PublicCandidate `json:"candidate"`
+		ScanFindings  []ScanFinding          `json:"scan_findings"`
+	}{preparation.SchemaVersion, preparation.Candidate, preparation.ScanFindings})
+}
+
+func ApprovalPlanDigest(preparation PublicPreparation, approvedBy string) string {
+	return digestJSON(struct {
+		Operation         string `json:"operation"`
+		PreparationDigest string `json:"preparation_digest"`
+		ApprovedBy        string `json:"approved_by"`
+	}{"approve", PreparationDigest(preparation), approvedBy})
+}
+
+func CreatePlanDigest(preparation PublicPreparation, approval policy.PublicApproval) string {
+	return digestJSON(struct {
+		Operation         string `json:"operation"`
+		PreparationDigest string `json:"preparation_digest"`
+		ApprovalDigest    string `json:"approval_digest"`
+	}{"create", PreparationDigest(preparation), approval.Digest})
+}
+
+func RevocationPlanDigest(approvalDigest, exportDigest, reason string) string {
+	return digestJSON(struct {
+		Operation      string `json:"operation"`
+		ApprovalDigest string `json:"approval_digest"`
+		ExportDigest   string `json:"export_digest"`
+		Reason         string `json:"reason"`
+	}{"revoke", approvalDigest, exportDigest, reason})
+}
+
 func sha(content []byte) string {
 	sum := sha256.Sum256(content)
 	return "sha256:" + hex.EncodeToString(sum[:])
@@ -205,4 +262,9 @@ func digestMap(values map[string]string) string {
 		hash.Write([]byte{0})
 	}
 	return "sha256:" + hex.EncodeToString(hash.Sum(nil))
+}
+
+func digestJSON(value any) string {
+	encoded, _ := json.Marshal(value)
+	return sha(encoded)
 }

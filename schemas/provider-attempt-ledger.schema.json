@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/provider-attempt-ledger.schema.json",
+  "type": "object",
+  "required": ["schema_version", "attempts"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sequence", "task_id", "provider", "packet_digest", "network_destination_class", "credential_source", "status", "recorded_at"],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1},
+          "task_id": {"type": "string", "pattern": "^task-[a-f0-9]{24}$"},
+          "provider": {"type": "string", "minLength": 1},
+          "packet_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "execution_plan_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "network_destination_class": {"enum": ["none", "local", "external", "unknown"]},
+          "credential_source": {"enum": ["none", "environment", "stdin_proxy", "system_credential"]},
+          "status": {"enum": ["planned", "packet_ready", "started", "completed", "failed"]},
+          "failure_class": {"enum": ["timeout", "quota_exhausted", "rate_limited", "login_required", "provider_failed"]},
+          "recorded_at": {"type": "string", "format": "date-time"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

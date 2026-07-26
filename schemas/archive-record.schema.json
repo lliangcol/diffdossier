@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/archive-record.schema.json",
+  "type": "object",
+  "required": ["schema_version", "repository_id", "run_id", "run_state", "archived_at", "pinned", "reason", "last_event_hash", "content_digest", "record_digest"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "repository_id": {"type": "string", "pattern": "^repo-[a-f0-9]{32}$"},
+    "run_id": {"type": "string", "pattern": "^run-[a-f0-9]{24}$"},
+    "run_state": {"enum": ["FINALIZED", "EXPORTED", "BLOCKED"]},
+    "archived_at": {"type": "string", "format": "date-time"},
+    "pinned": {"type": "boolean"},
+    "reason": {"type": "string", "minLength": 1},
+    "last_event_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "content_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "record_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}

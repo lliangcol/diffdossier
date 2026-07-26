@@ -1,6 +1,9 @@
 package packets
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"testing"
 
 	"github.com/lliangcol/diffdossier/internal/inventory"
@@ -23,6 +26,37 @@ func TestBuildNeverDropsOversizedReferences(t *testing.T) {
 	if packet.Status != "incomplete" || len(packet.Files) != 1 || !packet.Files[0].FullReadRequired || packet.TaskInputHash == "" {
 		t.Fatalf("packet silently lost oversized input: %+v", packet)
 	}
+}
+
+func TestMaterializeLoadsEveryUniqueBoundBlob(t *testing.T) {
+	current := []byte("current")
+	previous := []byte("previous")
+	currentDigest := testDigest(current)
+	previousDigest := testDigest(previous)
+	packet := Packet{Files: []FileReference{
+		{CurrentBlob: currentDigest, PreviousBlob: previousDigest},
+		{CurrentBlob: currentDigest},
+	}}
+	loads := 0
+	materialized, err := Materialize(packet, func(digest string) ([]byte, error) {
+		loads++
+		switch digest {
+		case currentDigest:
+			return current, nil
+		case previousDigest:
+			return previous, nil
+		default:
+			return nil, errors.New("unknown blob")
+		}
+	})
+	if err != nil || loads != 2 || len(materialized.Blobs) != 2 {
+		t.Fatalf("materialized=%+v loads=%d err=%v", materialized, loads, err)
+	}
+}
+
+func testDigest(content []byte) string {
+	sum := sha256.Sum256(content)
+	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
 func TestSecretDeniedCannotEnterPacket(t *testing.T) {

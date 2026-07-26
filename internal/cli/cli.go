@@ -35,8 +35,14 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return runPrepare(args[1:], stdout, stderr)
 	case "plan":
 		return runPlan(args[1:], stdout, stderr)
+	case "status":
+		return runStatus(args[1:], stdout, stderr)
+	case "packet":
+		return runPacket(args[1:], stdout, stderr)
 	case "record":
 		return runRecord(args[1:], stdout, stderr)
+	case "review":
+		return runReview(args[1:], stdout, stderr)
 	case "gates":
 		return runGates(args[1:], stdout, stderr)
 	case "export":
@@ -53,6 +59,10 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return runRefresh(args[1:], stdout, stderr)
 	case "recover":
 		return runRecover(args[1:], stdout, stderr)
+	case "run":
+		return runRun(args[1:], stdout, stderr)
+	case "gc":
+		return runGC(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n\n", args[0])
 		printUsage(stderr)
@@ -210,17 +220,28 @@ func printUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  diffdossier doctor [--json]")
 	fmt.Fprintln(writer, "  diffdossier prepare [--repo PATH] [--config PATH] [--state-dir PATH] [--json]")
 	fmt.Fprintln(writer, "  diffdossier plan [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier status [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier packet contract [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier packet task --task-id ID [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier record contract [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier record task --task-id ID --result PATH [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier review run --task-id ID [--provider manual|command] [provider authorization options] [--json]")
 	fmt.Fprintln(writer, "  diffdossier gates plan [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier gates run --trust-execution-plan DIGEST [--trust-shell] [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier export portable --output PATH [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier export public prepare --input PATH --class CLASS --action ACTION --policy-digest DIGEST [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier export public approve --preparation-digest DIGEST --operator NAME [--trust-public-approval DIGEST] [options]")
+	fmt.Fprintln(writer, "  diffdossier export public create --preparation-digest DIGEST --approval-digest DIGEST --output PATH [--trust-public-create DIGEST] [options]")
+	fmt.Fprintln(writer, "  diffdossier export public revoke --approval-digest DIGEST --export-digest DIGEST --reason TEXT --output PATH [--trust-public-revoke DIGEST] [options]")
 	fmt.Fprintln(writer, "  diffdossier verify [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier finalize [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier finding confirm|reject|accept-risk --finding-id ID --operator NAME [options]")
 	fmt.Fprintln(writer, "  diffdossier fix authorize --finding-ids ID[,ID] --scope-digest DIGEST --operator NAME --expires-at RFC3339 [options]")
 	fmt.Fprintln(writer, "  diffdossier refresh [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier recover --trust-journal-state STATE [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier run archive --reason TEXT [--pin] [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier gc [plan] [--repo PATH] [--config PATH] [--state-dir PATH] [--as-of RFC3339] [--json]")
+	fmt.Fprintln(writer, "  diffdossier gc run --trust-gc-plan DIGEST [--state-dir PATH] [--json]")
 	fmt.Fprintln(writer, "  diffdossier config validate [--repo PATH] [--config PATH] [--json]")
 	fmt.Fprintln(writer, "  diffdossier help")
 }
