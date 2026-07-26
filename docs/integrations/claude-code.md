@@ -3,7 +3,8 @@
 - Evidence date: 2026-07-27
 - Status: manual flow plus API-key-only opt-in automatic adapter
 - Automatic adapter: implemented in `diffdossier-provider`; publication authorized for the beta release
-- Live model smoke: requires an exact command plan, trust binding, egress grant, and API-key authentication
+- Live model smoke: successful compatibility remains unverified; the first-beta
+  deferral is recorded in `docs/governance/beta-claude-smoke-exception.md`
 - Locally observed CLI: `2.1.220 (Claude Code)`
 
 ## Verified capability
@@ -50,6 +51,9 @@ and created zero accepted Result artifacts. A successful Claude Code live
 compatibility smoke is not claimed. Until a compliant API key is supplied and
 the exact plan is rerun, the verified paths are the model-free tests and manual
 packet/import flow.
+
+The beta exception changes only the `v0.1.0-beta.1` publication gate. It does
+not turn this failed attempt into a pass and expires before a stable release.
 
 ## Terms, authentication, and data controls
 
