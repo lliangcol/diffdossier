@@ -18,7 +18,20 @@ import (
 	processrunner "github.com/lliangcol/diffdossier/internal/process"
 	"github.com/lliangcol/diffdossier/internal/results"
 	publicschema "github.com/lliangcol/diffdossier/pkg/schema"
+	"github.com/lliangcol/diffdossier/schemas"
 )
+
+func TestReviewResultSchemaMeetsStructuredOutputSubset(t *testing.T) {
+	content, err := schemas.Read("review-result.schema.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var root any
+	if err := json.Unmarshal(content, &root); err != nil {
+		t.Fatal(err)
+	}
+	assertStructuredOutputSchema(t, "$", root)
+}
 
 func TestCodexAdapterUsesIsolatedReadonlyInvocationAndBindsResult(t *testing.T) {
 	args, request, packet := adapterFixture(t, "codex")
@@ -165,4 +178,36 @@ func fileSHA256(t *testing.T, path string) string {
 	}
 	digest := sha256.Sum256(content)
 	return "sha256:" + hex.EncodeToString(digest[:])
+}
+
+func assertStructuredOutputSchema(t *testing.T, path string, value any) {
+	t.Helper()
+	node, ok := value.(map[string]any)
+	if !ok {
+		return
+	}
+	if _, hasConst := node["const"]; hasConst && node["type"] == nil {
+		t.Errorf("%s has const without type", path)
+	}
+	if properties, ok := node["properties"].(map[string]any); ok {
+		if node["type"] != "object" || node["additionalProperties"] != false {
+			t.Errorf("%s object must set type=object and additionalProperties=false", path)
+		}
+		required := map[string]bool{}
+		if list, ok := node["required"].([]any); ok {
+			for _, item := range list {
+				name, _ := item.(string)
+				required[name] = true
+			}
+		}
+		for name, property := range properties {
+			if !required[name] {
+				t.Errorf("%s property %q is not required", path, name)
+			}
+			assertStructuredOutputSchema(t, path+".properties."+name, property)
+		}
+	}
+	if items, ok := node["items"]; ok {
+		assertStructuredOutputSchema(t, path+".items", items)
+	}
 }

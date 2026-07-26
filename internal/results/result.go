@@ -42,7 +42,7 @@ type Finding struct {
 	Category               string `json:"category"`
 	PathBytesBase64        string `json:"path_bytes_base64"`
 	TriggerPathBytesBase64 string `json:"trigger_path_bytes_base64"`
-	Line                   int    `json:"line,omitempty"`
+	Line                   int    `json:"line"`
 	Evidence               string `json:"evidence"`
 	Impact                 string `json:"impact"`
 	Remediation            string `json:"remediation"`

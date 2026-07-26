@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["schema_version", "task_id", "snapshot_id", "task_input_hash", "reviewer", "coverage", "findings", "needs_confirmation", "residual_risks", "status"],
   "properties": {
-    "schema_version": {"const": "1.0"},
+    "schema_version": {"type": "string", "const": "1.0"},
     "task_id": {"type": "string", "minLength": 1},
     "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
     "task_input_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
@@ -40,7 +40,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "severity", "confidence", "category", "path_bytes_base64", "trigger_path_bytes_base64", "evidence", "impact", "remediation", "verification", "state"],
+        "required": ["id", "severity", "confidence", "category", "path_bytes_base64", "trigger_path_bytes_base64", "line", "evidence", "impact", "remediation", "verification", "state"],
         "properties": {
           "id": {"type": "string", "minLength": 1},
           "severity": {"enum": ["critical", "high", "medium", "low", "info"]},
