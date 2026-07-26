@@ -15,7 +15,6 @@ import (
 
 	"github.com/lliangcol/diffdossier/internal/exporter"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
-	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/policy"
 	"github.com/lliangcol/diffdossier/internal/snapshot"
 	"github.com/lliangcol/diffdossier/internal/store"
@@ -56,15 +55,9 @@ func resolveExportContext(repoPath, stateRoot, runID string) (exportContext, err
 	if err != nil {
 		return exportContext{}, err
 	}
-	if stateRoot == "" {
-		paths, pathErr := platform.DefaultPaths()
-		if pathErr != nil {
-			return exportContext{}, pathErr
-		}
-		stateRoot = paths.StateDir
-	}
-	if !filepath.IsAbs(stateRoot) {
-		return exportContext{}, errors.New("state-dir must be absolute")
+	stateRoot, err = resolveStateRoot(stateRoot)
+	if err != nil {
+		return exportContext{}, err
 	}
 	if err := requireOutsideRepository(repo.Root, stateRoot); err != nil {
 		return exportContext{}, err

@@ -3,14 +3,44 @@ package config
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 )
 
 const CurrentSchemaVersion = 1
+
+// MinimalDocument returns a deterministic, command-free starter configuration.
+// The caller must supply the baseline explicitly because DiffDossier never
+// guesses a branch name.
+func MinimalDocument(baseline string) ([]byte, error) {
+	if strings.TrimSpace(baseline) == "" {
+		return nil, errors.New("baseline is required; DiffDossier does not guess main or master")
+	}
+	document := fmt.Sprintf(
+		"schema_version = %d\n"+
+			"baseline = %s\n"+
+			"include_untracked = true\n"+
+			"include_ignored = []\n\n"+
+			"[review]\n"+
+			"max_files_per_task = 8\n"+
+			"max_packet_bytes = 250000\n"+
+			"default_provider = \"manual\"\n\n"+
+			"[state]\n"+
+			"retention_days = 30\n\n"+
+			"[risk]\n"+
+			"policy_files = []\n",
+		CurrentSchemaVersion,
+		strconv.Quote(baseline),
+	)
+	return []byte(document), nil
+}
 
 type Config struct {
 	SchemaVersion    int
@@ -21,6 +51,20 @@ type Config struct {
 	State            State
 	Risk             Risk
 	Gates            []Gate
+}
+
+// Source records a configuration layer without exposing its contents.
+type Source struct {
+	Kind   string `json:"kind"`
+	Path   string `json:"path"`
+	Digest string `json:"digest"`
+}
+
+// Effective is the validated, deterministic result of applying configuration layers.
+type Effective struct {
+	Config  Config   `json:"config"`
+	Sources []Source `json:"sources"`
+	Digest  string   `json:"digest"`
 }
 
 type Review struct {
@@ -64,18 +108,74 @@ func Default() Config {
 }
 
 func Load(path string) (Config, error) {
+	effective, err := LoadExact(path)
+	return effective.Config, err
+}
+
+// LoadExact loads one required configuration file over built-in defaults.
+// It is used for an explicit --config or DIFFDOSSIER_CONFIG selection.
+func LoadExact(path string) (Effective, error) {
+	return LoadExactWithBaseline(path, "")
+}
+
+// LoadExactWithBaseline applies an optional exact CLI baseline after parsing.
+func LoadExactWithBaseline(path, baseline string) (Effective, error) {
+	cfg, source, err := loadLayer(Default(), "explicit", path)
+	if err != nil {
+		return Effective{}, err
+	}
+	sources := []Source{source}
+	applyBaselineOverride(&cfg, &sources, baseline)
+	return finish(cfg, sources)
+}
+
+// LoadEffective applies built-in defaults, an optional user layer, then the
+// required repository layer. Arrays in a higher layer replace lower arrays.
+func LoadEffective(userPath, repositoryPath string) (Effective, error) {
+	return LoadEffectiveWithBaseline(userPath, repositoryPath, "")
+}
+
+// LoadEffectiveWithBaseline applies an optional exact CLI baseline after all files.
+func LoadEffectiveWithBaseline(userPath, repositoryPath, baseline string) (Effective, error) {
+	cfg := Default()
+	sources := []Source{}
+	if userPath != "" {
+		loaded, source, err := loadLayer(cfg, "user", userPath)
+		if err != nil {
+			if !errors.Is(err, os.ErrNotExist) {
+				return Effective{}, err
+			}
+		} else {
+			cfg = loaded
+			sources = append(sources, source)
+		}
+	}
+	var source Source
+	var err error
+	cfg, source, err = loadLayer(cfg, "repository", repositoryPath)
+	if err != nil {
+		return Effective{}, err
+	}
+	sources = append(sources, source)
+	applyBaselineOverride(&cfg, &sources, baseline)
+	return finish(cfg, sources)
+}
+
+func loadLayer(cfg Config, kind, path string) (Config, Source, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return Config{}, fmt.Errorf("open config: %w", err)
+		return Config{}, Source{}, fmt.Errorf("open config %s: %w", path, err)
 	}
 	defer file.Close()
 
-	cfg := Default()
+	hasher := sha256.New()
+	scanner := bufio.NewScanner(io.TeeReader(file, hasher))
+	scanner.Split(bufio.ScanLines)
 	section := ""
 	gateIndex := -1
+	gatesReplaced := false
 	seenFields := map[string]bool{}
 	seenSections := map[string]bool{}
-	scanner := bufio.NewScanner(file)
 	for lineNumber := 1; scanner.Scan(); lineNumber++ {
 		line := strings.TrimSpace(stripComment(scanner.Text()))
 		if line == "" {
@@ -83,7 +183,11 @@ func Load(path string) (Config, error) {
 		}
 		if strings.HasPrefix(line, "[[") {
 			if line != "[[gates]]" {
-				return Config{}, lineError(lineNumber, "unknown array section")
+				return Config{}, Source{}, lineError(lineNumber, "unknown array section")
+			}
+			if !gatesReplaced {
+				cfg.Gates = nil
+				gatesReplaced = true
 			}
 			cfg.Gates = append(cfg.Gates, Gate{})
 			gateIndex = len(cfg.Gates) - 1
@@ -92,14 +196,14 @@ func Load(path string) (Config, error) {
 		}
 		if strings.HasPrefix(line, "[") {
 			if !strings.HasSuffix(line, "]") {
-				return Config{}, lineError(lineNumber, "unterminated section")
+				return Config{}, Source{}, lineError(lineNumber, "unterminated section")
 			}
 			section = strings.TrimSpace(line[1 : len(line)-1])
 			if section != "review" && section != "state" && section != "risk" {
-				return Config{}, lineError(lineNumber, "unknown section "+section)
+				return Config{}, Source{}, lineError(lineNumber, "unknown section "+section)
 			}
 			if seenSections[section] {
-				return Config{}, lineError(lineNumber, "duplicate section "+section)
+				return Config{}, Source{}, lineError(lineNumber, "duplicate section "+section)
 			}
 			seenSections[section] = true
 			gateIndex = -1
@@ -107,25 +211,53 @@ func Load(path string) (Config, error) {
 		}
 		key, raw, ok := strings.Cut(line, "=")
 		if !ok {
-			return Config{}, lineError(lineNumber, "expected key = value")
+			return Config{}, Source{}, lineError(lineNumber, "expected key = value")
 		}
 		key = strings.TrimSpace(key)
 		fieldID := fmt.Sprintf("%s/%d/%s", section, gateIndex, key)
 		if seenFields[fieldID] {
-			return Config{}, lineError(lineNumber, "duplicate field "+key)
+			return Config{}, Source{}, lineError(lineNumber, "duplicate field "+key)
 		}
 		seenFields[fieldID] = true
 		if err := assign(&cfg, section, gateIndex, key, strings.TrimSpace(raw)); err != nil {
-			return Config{}, lineError(lineNumber, err.Error())
+			return Config{}, Source{}, lineError(lineNumber, err.Error())
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return Config{}, fmt.Errorf("read config: %w", err)
+		return Config{}, Source{}, fmt.Errorf("read config %s: %w", path, err)
 	}
+	validatedLayer := cfg
+	if strings.TrimSpace(validatedLayer.Baseline) == "" {
+		validatedLayer.Baseline = "pending-higher-precedence-baseline"
+	}
+	if err := validatedLayer.Validate(); err != nil {
+		return Config{}, Source{}, fmt.Errorf("validate config %s: %w", path, err)
+	}
+	return cfg, Source{Kind: kind, Path: path, Digest: "sha256:" + hex.EncodeToString(hasher.Sum(nil))}, nil
+}
+
+func applyBaselineOverride(cfg *Config, sources *[]Source, baseline string) {
+	if strings.TrimSpace(baseline) == "" {
+		return
+	}
+	cfg.Baseline = baseline
+	digest := sha256.Sum256([]byte(baseline))
+	*sources = append(*sources, Source{Kind: "cli", Path: "baseline", Digest: "sha256:" + hex.EncodeToString(digest[:])})
+}
+
+func finish(cfg Config, sources []Source) (Effective, error) {
 	if err := cfg.Validate(); err != nil {
-		return Config{}, err
+		return Effective{}, err
 	}
-	return cfg, nil
+	encoded, err := json.Marshal(cfg)
+	if err != nil {
+		return Effective{}, fmt.Errorf("encode effective config: %w", err)
+	}
+	digest := sha256.Sum256(encoded)
+	return Effective{
+		Config: cfg, Sources: append([]Source{}, sources...),
+		Digest: "sha256:" + hex.EncodeToString(digest[:]),
+	}, nil
 }
 
 func (c Config) Validate() error {

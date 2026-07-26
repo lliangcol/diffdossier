@@ -10,9 +10,10 @@ public release, stable CLI, or Tier 1 platform support is claimed yet.
 
 - The initial CLI foundation is published on `main` at `github.com/lliangcol/diffdossier`; no release or stability promise exists yet.
 - The Go module path is `github.com/lliangcol/diffdossier`.
-- The current CLI exposes version, doctor, strict config validate,
-  repository-external prepare snapshots, and deterministic plan/manual packet
-  generation. It can strictly import task results, govern findings and fix
+- The current CLI exposes version, doctor, safe no-overwrite config init,
+  strict config validate, repository-external prepare snapshots, and
+  deterministic plan/manual packet generation. It can strictly import task
+  results, govern findings and fix
   authorization, refresh invalidated work, plan trusted Gates, verify/finalize
   evidence, create private portable exports, archive terminal runs, and execute
   content-bound retention plans. Public prepare/approve/create/revoke commands
@@ -45,7 +46,10 @@ public release, stable CLI, or Tier 1 platform support is claimed yet.
 go test ./...
 go vet ./...
 go run ./cmd/diffdossier version --json
-go run ./cmd/diffdossier doctor --json
+go run ./cmd/diffdossier doctor --repo . --json
+# Run this only in a Git repository that does not already contain
+# diffdossier.toml. The baseline must be explicit and locally resolvable.
+go run ./cmd/diffdossier init --repo /absolute/repository --baseline refs/remotes/origin/main --json
 go run ./cmd/diffdossier config validate --repo . --config diffdossier.example.toml --json
 go run ./cmd/diffdossier prepare --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
 go run ./cmd/diffdossier plan --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json

@@ -10,7 +10,6 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/lliangcol/diffdossier/internal/config"
 	"github.com/lliangcol/diffdossier/internal/contracts"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
 	"github.com/lliangcol/diffdossier/internal/packets"
@@ -52,6 +51,7 @@ func runPacketContract(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	repoFlag := flags.String("repo", ".", "target Git repository")
 	configFlag := flags.String("config", "", "configuration file")
+	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
 	runFlag := flags.String("run-id", "", "prepared run ID (default: latest)")
 	jsonOutput := flags.Bool("json", false, "emit stable JSON")
@@ -67,21 +67,16 @@ func runPacketContract(args []string, stdout, stderr io.Writer) int {
 	if resolved.run.State != "PREPARED" {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_WORKFLOW_STATE", "contract packet requires PREPARED run"), ExitIncomplete)
 	}
-	configPath := *configFlag
-	if configPath == "" {
-		configPath = filepath.Join(resolved.repoRoot, "diffdossier.toml")
-	} else if !filepath.IsAbs(configPath) {
-		configPath = filepath.Join(resolved.repoRoot, configPath)
-	}
-	cfg, err := config.Load(configPath)
+	effective, err := loadEffectiveConfig(resolved.repoRoot, *configFlag, *baselineFlag)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_CONFIG_INVALID", err.Error()), ExitUsage)
 	}
+	cfg := effective.Config
 	repo, err := gitrepo.Open(nilContext(), resolved.repoRoot)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_GIT_REPOSITORY", err.Error()), ExitEvidence)
 	}
-	digests, err := semanticDigests(repo, configPath, cfg.Risk.PolicyFiles)
+	digests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_EVIDENCE_DIGEST", err.Error()), ExitEvidence)
 	}
@@ -129,6 +124,8 @@ func runPacketTask(args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("packet task", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	repoFlag := flags.String("repo", ".", "target Git repository")
+	configFlag := flags.String("config", "", "configuration file")
+	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
 	runFlag := flags.String("run-id", "", "contracted run ID (default: latest)")
 	taskFlag := flags.String("task-id", "", "task ID")
@@ -144,6 +141,23 @@ func runPacketTask(args []string, stdout, stderr io.Writer) int {
 	}
 	if resolved.run.State == "PREPARED" {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_WORKFLOW_STATE", "task packet requires a contracted run"), ExitIncomplete)
+	}
+	effective, err := loadEffectiveConfig(resolved.repoRoot, *configFlag, *baselineFlag)
+	if err != nil {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_CONFIG_INVALID", err.Error()), ExitUsage)
+	}
+	repo, err := gitrepo.Open(nilContext(), resolved.repoRoot)
+	if err != nil {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_GIT_REPOSITORY", err.Error()), ExitEvidence)
+	}
+	digests, err := semanticDigests(repo, effective)
+	if err != nil {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_EVIDENCE_DIGEST", err.Error()), ExitEvidence)
+	}
+	cfg := effective.Config
+	request := snapshot.Request{Repo: repo, Baseline: cfg.Baseline, InputDigests: digests, IncludeUntracked: cfg.IncludeUntracked, IncludeIgnored: cfg.IncludeIgnored}
+	if err := snapshot.VerifyFresh(nilContext(), request, resolved.seal); err != nil {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_SNAPSHOT_STALE", err.Error()), ExitStale)
 	}
 	stored, err := loadTaskPacket(resolved, *taskFlag)
 	if err != nil {

@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lliangcol/diffdossier/internal/config"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
 	"github.com/lliangcol/diffdossier/internal/packets"
 	"github.com/lliangcol/diffdossier/internal/policy"
@@ -42,6 +41,7 @@ func runReview(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	repoFlag := flags.String("repo", ".", "target Git repository")
 	configFlag := flags.String("config", "", "configuration file")
+	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
 	runFlag := flags.String("run-id", "", "contracted run ID (default: latest)")
 	taskFlag := flags.String("task-id", "", "task ID")
@@ -74,16 +74,11 @@ func runReview(args []string, stdout, stderr io.Writer) int {
 	if resolved.run.State != "CONTRACTED" && resolved.run.State != "REVIEWING" {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_WORKFLOW_STATE", "review run requires CONTRACTED or REVIEWING run"), ExitIncomplete)
 	}
-	configPath := *configFlag
-	if configPath == "" {
-		configPath = filepath.Join(resolved.repoRoot, "diffdossier.toml")
-	} else if !filepath.IsAbs(configPath) {
-		configPath = filepath.Join(resolved.repoRoot, configPath)
-	}
-	cfg, err := config.Load(configPath)
+	effective, err := loadEffectiveConfig(resolved.repoRoot, *configFlag, *baselineFlag)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_CONFIG_INVALID", err.Error()), ExitUsage)
 	}
+	cfg := effective.Config
 	providerName := *providerFlag
 	if providerName == "" {
 		providerName = cfg.Review.DefaultProvider
@@ -96,7 +91,7 @@ func runReview(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_GIT_REPOSITORY", err.Error()), ExitEvidence)
 	}
-	digests, err := semanticDigests(repo, configPath, cfg.Risk.PolicyFiles)
+	digests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_EVIDENCE_DIGEST", err.Error()), ExitEvidence)
 	}
@@ -239,7 +234,7 @@ func runReview(args []string, stdout, stderr io.Writer) int {
 	}
 	var recordOutput, recordError bytes.Buffer
 	recordCode := runRecord([]string{
-		"task", "--repo", resolved.repoRoot, "--config", configPath, "--state-dir", resolved.stateStore.Root,
+		"task", "--repo", resolved.repoRoot, "--config", *configFlag, "--baseline", *baselineFlag, "--state-dir", resolved.stateStore.Root,
 		"--run-id", resolved.run.ID, "--task-id", packet.TaskID, "--result", resultPath, "--json",
 	}, &recordOutput, &recordError)
 	if recordCode != ExitOK {

@@ -171,6 +171,90 @@ func TestDoctorJSON(t *testing.T) {
 	}
 }
 
+func TestDoctorReportsRuleConflictsWithoutExecutingConfiguredGate(t *testing.T) {
+	repo := initializedRepo(t)
+	marker := filepath.Join(t.TempDir(), "must-not-exist")
+	configuration := `baseline = "HEAD"
+[[gates]]
+id = "malicious-candidate"
+argv = ["sh", "-c", "touch ` + marker + `"]
+cwd = "."
+timeout_seconds = 30
+resource_class = "cpu"
+cache_class = "host_volatile"
+network_class = "none"
+`
+	if err := os.WriteFile(filepath.Join(repo, "diffdossier.toml"), []byte(configuration), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(repo, "AGENTS.md"), []byte("one\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(repo, "CLAUDE.md"), []byte("two\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	state := filepath.Join(t.TempDir(), "state")
+	cache := filepath.Join(t.TempDir(), "cache")
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"doctor", "--repo", repo, "--state-dir", state, "--cache-dir", cache, "--json"}, &stdout, &stderr)
+	if code != ExitOK {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"status":"needs_confirmation"`) || !strings.Contains(stdout.String(), `"commands_executed":0`) || !strings.Contains(stdout.String(), `"rule_conflicts"`) {
+		t.Fatalf("stdout=%s", stdout.String())
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Fatalf("doctor executed an untrusted Gate candidate: %v", err)
+	}
+}
+
+func TestDoctorHonorsStateAndCacheEnvironment(t *testing.T) {
+	repo := initializedRepo(t)
+	if err := os.WriteFile(filepath.Join(repo, "diffdossier.toml"), []byte("baseline = \"HEAD\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	state := filepath.Join(t.TempDir(), "state")
+	cache := filepath.Join(t.TempDir(), "cache")
+	t.Setenv("DIFFDOSSIER_STATE_DIR", state)
+	t.Setenv("DIFFDOSSIER_CACHE_DIR", cache)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"doctor", "--repo", repo, "--json"}, &stdout, &stderr); code != ExitOK {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), state) || !strings.Contains(stdout.String(), cache) {
+		t.Fatalf("stdout=%s", stdout.String())
+	}
+}
+
+func TestDoctorDiagnosesStateAndCacheInsideRepository(t *testing.T) {
+	repo := initializedRepo(t)
+	if err := os.WriteFile(filepath.Join(repo, "diffdossier.toml"), []byte("baseline = \"HEAD\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"doctor", "--repo", repo, "--state-dir", filepath.Join(repo, "state"), "--cache-dir", filepath.Join(repo, "cache"), "--json"}, &stdout, &stderr)
+	if code != ExitOK {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"state_status":"invalid"`) || !strings.Contains(stdout.String(), `"cache_status":"invalid"`) || !strings.Contains(stdout.String(), `"status":"needs_confirmation"`) {
+		t.Fatalf("stdout=%s", stdout.String())
+	}
+}
+
+func TestDoctorReportsUnresolvedBaselineAsNeedsConfirmation(t *testing.T) {
+	repo := initializedRepo(t)
+	if err := os.WriteFile(filepath.Join(repo, "diffdossier.toml"), []byte("baseline = \"refs/heads/missing\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"doctor", "--repo", repo, "--json"}, &stdout, &stderr); code != ExitOK {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), `"baseline_status":"unresolved"`) || !strings.Contains(stdout.String(), `"status":"needs_confirmation"`) {
+		t.Fatalf("stdout=%s", stdout.String())
+	}
+}
+
 type failingWriter struct{}
 
 func (failingWriter) Write([]byte) (int, error) {

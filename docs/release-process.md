@@ -1,8 +1,11 @@
 # Release process
 
 DiffDossier has no public release yet. This document defines the evidence that
-must exist before a maintainer creates one. It does not authorize a tag,
-GitHub Actions change, ruleset change, or GitHub Release.
+must exist before a maintainer creates one. On 2026-07-27, maintainer
+`liuliang1` explicitly authorized the pinned CI and release workflows, the
+main ruleset described below, Provider compatibility smoke, ONM migration, the
+`v0.1.0-beta.1` tag, attestation, and public prerelease operation. Execution
+still fails closed until each preceding check has produced its own evidence.
 
 ## Required approvals and evidence
 
@@ -17,6 +20,11 @@ GitHub Actions change, ruleset change, or GitHub Release.
    Semantic Version. The tag and `HEAD` must resolve to the same commit.
 5. Tests, race tests where supported, vet, formatting, schema validation,
    security tests, and model-free E2E pass against that commit.
+
+The G-03 decision identifies Liu Liang as copyright holder and records the
+pre-enforcement commit range without rewriting it in
+`docs/governance/dco-history-exception.md`. New contribution commits require
+DCO sign-off as `Liu Liang <lliang@outlook.com>`.
 
 ## Local artifact preparation
 

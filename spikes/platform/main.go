@@ -60,14 +60,7 @@ func checkGitNULPaths() error {
 		return fmt.Errorf("git init: %w: %s", err, bytes.TrimSpace(output))
 	}
 
-	names := []string{
-		"plain.txt",
-		"space name.txt",
-		"tab\tname.txt",
-		"line\nname.txt",
-		"中文.txt",
-		"emoji-😀.txt",
-	}
+	names := compatibilityPathNames(runtime.GOOS)
 	for _, name := range names {
 		if err := os.WriteFile(filepath.Join(repo, name), []byte("fixture\n"), 0o600); err != nil {
 			return fmt.Errorf("write %q: %w", name, err)
@@ -91,6 +84,14 @@ func checkGitNULPaths() error {
 		return fmt.Errorf("path mismatch: got %q want %q", actual, names)
 	}
 	return nil
+}
+
+func compatibilityPathNames(goos string) []string {
+	names := []string{"plain.txt", "space name.txt", "中文.txt", "emoji-😀.txt"}
+	if goos != "windows" {
+		names = append(names, "tab\tname.txt", "line\nname.txt")
+	}
+	return names
 }
 
 func parsePorcelainV1Z(data []byte) ([]string, error) {

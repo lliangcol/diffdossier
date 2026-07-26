@@ -25,11 +25,22 @@ func TestCancellationKillsGrandchildProcessGroup(t *testing.T) {
 		done <- err
 	}()
 	markerDeadline := time.Now().Add(2 * time.Second)
+	pid := 0
 	for time.Now().Before(markerDeadline) {
-		if _, statErr := os.Stat(marker); statErr == nil {
-			break
+		content, readErr := os.ReadFile(marker)
+		if readErr == nil {
+			parsed, parseErr := strconv.Atoi(strings.TrimSpace(string(content)))
+			if parseErr == nil && parsed > 0 {
+				pid = parsed
+				break
+			}
 		}
 		time.Sleep(10 * time.Millisecond)
+	}
+	if pid == 0 {
+		cancel()
+		<-done
+		t.Fatal("grandchild PID marker was not fully written before deadline")
 	}
 	cancel()
 	err := <-done
@@ -37,14 +48,6 @@ func TestCancellationKillsGrandchildProcessGroup(t *testing.T) {
 		if !errors.Is(err, context.Canceled) {
 			t.Fatalf("run error=%v", err)
 		}
-	}
-	content, readErr := os.ReadFile(marker)
-	if readErr != nil {
-		t.Fatal(readErr)
-	}
-	pid, parseErr := strconv.Atoi(strings.TrimSpace(string(content)))
-	if parseErr != nil {
-		t.Fatal(parseErr)
 	}
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {

@@ -7,16 +7,13 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"sort"
 	"time"
 
-	"github.com/lliangcol/diffdossier/internal/config"
 	"github.com/lliangcol/diffdossier/internal/contracts"
 	"github.com/lliangcol/diffdossier/internal/gates"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
 	"github.com/lliangcol/diffdossier/internal/planner"
-	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/reporting"
 	"github.com/lliangcol/diffdossier/internal/results"
 	"github.com/lliangcol/diffdossier/internal/risk"
@@ -35,6 +32,7 @@ func runVerify(args []string, stdout, stderr io.Writer, finalize bool) int {
 	flags.SetOutput(stderr)
 	repoFlag := flags.String("repo", ".", "target Git repository")
 	configFlag := flags.String("config", "", "configuration file")
+	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
 	runFlag := flags.String("run-id", "", "run ID (default: latest)")
 	jsonOutput := flags.Bool("json", false, "emit stable JSON")
@@ -48,25 +46,13 @@ func runVerify(args []string, stdout, stderr io.Writer, finalize bool) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_GIT_REPOSITORY", err.Error()), ExitEvidence)
 	}
-	configPath := *configFlag
-	if configPath == "" {
-		configPath = filepath.Join(repo.Root, "diffdossier.toml")
-	} else if !filepath.IsAbs(configPath) {
-		configPath = filepath.Join(repo.Root, configPath)
-	}
-	cfg, err := config.Load(configPath)
+	effective, err := loadEffectiveConfig(repo.Root, *configFlag, *baselineFlag)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_CONFIG_INVALID", err.Error()), ExitUsage)
 	}
-	stateRoot := *stateFlag
-	if stateRoot == "" {
-		paths, pathErr := platform.DefaultPaths()
-		if pathErr != nil {
-			return ExitInternal
-		}
-		stateRoot = paths.StateDir
-	}
-	if !filepath.IsAbs(stateRoot) {
+	cfg := effective.Config
+	stateRoot, err := resolveStateRoot(*stateFlag)
+	if err != nil {
 		return ExitUsage
 	}
 	stateStore, err := store.Open(stateRoot)
@@ -93,7 +79,7 @@ func runVerify(args []string, stdout, stderr io.Writer, finalize bool) int {
 	if err != nil {
 		return ExitEvidence
 	}
-	digests, err := semanticDigests(repo, configPath, cfg.Risk.PolicyFiles)
+	digests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return ExitEvidence
 	}

@@ -18,7 +18,6 @@ import (
 	"github.com/lliangcol/diffdossier/internal/config"
 	"github.com/lliangcol/diffdossier/internal/contracts"
 	"github.com/lliangcol/diffdossier/internal/gitrepo"
-	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/risk"
 	"github.com/lliangcol/diffdossier/internal/snapshot"
 	"github.com/lliangcol/diffdossier/internal/store"
@@ -31,6 +30,7 @@ func runPrepare(args []string, stdout, stderr io.Writer) int {
 	flags.SetOutput(stderr)
 	repoFlag := flags.String("repo", ".", "target Git repository")
 	configFlag := flags.String("config", "", "configuration file")
+	baselineFlag := flags.String("baseline", "", "exact local baseline ref override")
 	stateFlag := flags.String("state-dir", "", "durable state directory")
 	jsonOutput := flags.Bool("json", false, "emit stable JSON")
 	if err := flags.Parse(args); errors.Is(err, flag.ErrHelp) {
@@ -43,31 +43,19 @@ func runPrepare(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_GIT_REPOSITORY", err.Error()), ExitEvidence)
 	}
-	configPath := *configFlag
-	if configPath == "" {
-		configPath = filepath.Join(repo.Root, "diffdossier.toml")
-	} else if !filepath.IsAbs(configPath) {
-		configPath = filepath.Join(repo.Root, configPath)
-	}
-	cfg, err := config.Load(configPath)
+	effective, err := loadEffectiveConfig(repo.Root, *configFlag, *baselineFlag)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_CONFIG_INVALID", err.Error()), ExitUsage)
 	}
-	stateRoot := *stateFlag
-	if stateRoot == "" {
-		paths, pathErr := platform.DefaultPaths()
-		if pathErr != nil {
-			return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_PLATFORM_PATHS", pathErr.Error()), ExitInternal)
-		}
-		stateRoot = paths.StateDir
-	}
-	if !filepath.IsAbs(stateRoot) {
+	cfg := effective.Config
+	stateRoot, err := resolveStateRoot(*stateFlag)
+	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_USAGE_INVALID_PATH", "state-dir must be absolute"), ExitUsage)
 	}
 	if err := requireOutsideRepository(repo.Root, stateRoot); err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_USAGE_INVALID_PATH", err.Error()), ExitUsage)
 	}
-	digests, err := semanticDigests(repo, configPath, cfg.Risk.PolicyFiles)
+	digests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_EVIDENCE_DIGEST", err.Error()), ExitEvidence)
 	}
@@ -78,7 +66,7 @@ func runPrepare(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_SNAPSHOT_CAPTURE", err.Error()), ExitEvidence)
 	}
-	afterDigests, err := semanticDigests(repo, configPath, cfg.Risk.PolicyFiles)
+	afterDigests, err := semanticDigests(repo, effective)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_EVIDENCE_DIGEST", err.Error()), ExitEvidence)
 	}
@@ -124,17 +112,12 @@ func sameDigests(left, right map[string]string) bool {
 	return true
 }
 
-func semanticDigests(repo *gitrepo.Repo, configPath string, policyFiles []string) (map[string]string, error) {
-	content, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, err
-	}
-	digest := sha256.Sum256(content)
+func semanticDigests(repo *gitrepo.Repo, effective config.Effective) (map[string]string, error) {
 	result, err := embeddedschemas.Digests()
 	if err != nil {
 		return nil, err
 	}
-	result["config"] = "sha256:" + hex.EncodeToString(digest[:])
+	result["config"] = effective.Digest
 	rules, err := contracts.DiscoverRules(repo.Root)
 	if err != nil {
 		return nil, err
@@ -142,7 +125,7 @@ func semanticDigests(repo *gitrepo.Repo, configPath string, policyFiles []string
 	for _, rule := range rules {
 		result["rule/"+rule.Path] = rule.Digest
 	}
-	for _, relative := range policyFiles {
+	for _, relative := range effective.Config.Risk.PolicyFiles {
 		resolved, err := risk.ResolvePolicyPath(repo.Root, relative)
 		if err != nil {
 			return nil, err
