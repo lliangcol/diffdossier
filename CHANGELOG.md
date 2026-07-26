@@ -32,3 +32,6 @@ Versioning once releases begin.
 - Added exact dual approval binding for redacted public summaries, privacy
   canaries, prompt-injection isolation, platform capability diagnostics, and
   fixed-fixture performance benchmarks.
+- Added clean-commit release preparation for deterministic six-target archives,
+  checksums, a minimal SPDX source/module SBOM, unsigned local provenance, and
+  isolated native install verification. No public release or workflow is enabled.

@@ -60,6 +60,7 @@
         "GOVERNANCE.md",
         "NOTICE",
         "SECURITY.md",
+        "SUPPORT.md",
         "docs/**",
         "policies/**",
         "schemas/**",

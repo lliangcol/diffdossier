@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/release-provenance.schema.json",
+  "title": "DiffDossier local release provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "signed", "source", "version", "commit", "source_date", "go_version", "build_flags", "artifacts"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "kind": {"const": "local_unsigned_provenance"},
+    "signed": {"const": false},
+    "source": {"const": "https://github.com/lliangcol/diffdossier"},
+    "version": {"type": "string", "minLength": 1, "maxLength": 64},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "source_date": {"type": "string", "format": "date-time"},
+    "go_version": {"type": "string", "minLength": 1},
+    "build_flags": {"type": "array", "items": {"type": "string"}},
+    "artifacts": {"type": "array", "minItems": 6, "maxItems": 6}
+  }
+}

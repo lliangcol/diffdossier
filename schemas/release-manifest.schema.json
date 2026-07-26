@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/release-manifest.schema.json",
+  "title": "DiffDossier release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project", "version", "commit", "source_date", "go_version", "candidate", "artifacts"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "project": {"const": "DiffDossier"},
+    "version": {"type": "string", "minLength": 1, "maxLength": 64},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "source_date": {"type": "string", "format": "date-time"},
+    "go_version": {"type": "string", "minLength": 1},
+    "candidate": {"type": "boolean"},
+    "artifacts": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {"$ref": "#/$defs/artifact"}
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "os", "architecture", "format", "sha256", "size"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^diffdossier_[0-9A-Za-z._+-]+_(darwin|linux|windows)_(amd64|arm64)\\.(tar\\.gz|zip)$"},
+        "os": {"enum": ["darwin", "linux", "windows"]},
+        "architecture": {"enum": ["amd64", "arm64"]},
+        "format": {"enum": ["tar.gz", "zip"]},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

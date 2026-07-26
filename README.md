@@ -3,7 +3,8 @@
 DiffDossier is a local-first, provider-neutral, evidence-driven orchestrator
 for reviewing and fixing large Git changes.
 
-The repository is in Phase 6 implementation. No public release, stable CLI, or Tier 1 platform support is claimed yet.
+The repository has completed local Phase 7 release-preparation engineering. No
+public release, stable CLI, or Tier 1 platform support is claimed yet.
 
 ## Current boundaries
 
@@ -29,6 +30,9 @@ The repository is in Phase 6 implementation. No public release, stable CLI, or T
   pending.
 - Interrupted write-ahead transitions can be resumed only with
   `recover --trust-journal-state <exact-state>`; recovery does not guess.
+- Maintainer tooling can prepare deterministic multi-platform candidate
+  archives, checksums, a minimal SPDX SBOM, and unsigned local provenance. A
+  real tag, GitHub attestation, Actions workflow, and Release remain gated.
 
 ## Local verification
 
@@ -54,6 +58,8 @@ integration status are documented in [providers and results](docs/providers-and-
 [Codex](docs/integrations/codex.md), and [Claude Code](docs/integrations/claude-code.md).
 The Phase 5 workflow, Gate, report, and export contracts are described in
 [workflow, Gates, and reporting](docs/workflow-gates-reporting.md).
+Release preparation and install verification are documented in
+[the release process](docs/release-process.md) and [install guide](docs/install.md).
 
 ## Governance and security
 
@@ -61,3 +67,4 @@ The project is Apache-2.0 licensed, uses DCO sign-off, and accepts only
 synthetic or explicitly approved public data in this repository. Read
 [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
 [GOVERNANCE.md](GOVERNANCE.md) before contributing.
+Current support boundaries are in [SUPPORT.md](SUPPORT.md).
