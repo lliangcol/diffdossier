@@ -3,7 +3,7 @@
 DiffDossier is a local-first, provider-neutral, evidence-driven orchestrator
 for reviewing and fixing large Git changes.
 
-The repository is in early Phase 1 implementation. No public release, stable CLI, or platform support is claimed yet.
+The repository is in Phase 4 implementation. No public release, stable CLI, or platform support is claimed yet.
 
 ## Current boundaries
 
@@ -11,7 +11,10 @@ The repository is in early Phase 1 implementation. No public release, stable CLI
 - The Go module path is `github.com/lliangcol/diffdossier`.
 - The current CLI exposes version, doctor, strict config validate,
   repository-external prepare snapshots, and deterministic plan/manual packet
-  generation; the remaining workflow is under active implementation.
+  generation. It can strictly import task results with `record task`.
+- The internal Provider boundary includes model-free manual/mock implementations
+  and an authorization-gated argv-only command protocol. No automatic Codex or
+  Claude Code adapter is published.
 - The compatibility spike uses only the Go standard library and the local Git executable.
 - No networked provider, project-defined command, automatic fix, remote write/CI workflow, or public export is enabled.
 
@@ -25,12 +28,15 @@ go run ./cmd/diffdossier doctor --json
 go run ./cmd/diffdossier config validate --repo . --config diffdossier.example.toml --json
 go run ./cmd/diffdossier prepare --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
 go run ./cmd/diffdossier plan --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
+go run ./cmd/diffdossier record task --repo . --state-dir /absolute/private/state --task-id task-... --result /absolute/result.json --json
 ```
 
 See [configuration](docs/configuration.md), [snapshot semantics](docs/snapshots.md),
 [planning and packets](docs/planning-and-packets.md), [the architecture decision
 records](docs/adr/README.md), and [the platform compatibility
-spike](docs/platform-compatibility.md).
+spike](docs/platform-compatibility.md). Provider boundaries and manual
+integration status are documented in [providers and results](docs/providers-and-results.md),
+[Codex](docs/integrations/codex.md), and [Claude Code](docs/integrations/claude-code.md).
 
 ## Governance and security
 

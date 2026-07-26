@@ -157,6 +157,7 @@ func semanticDigests(repo *gitrepo.Repo, configPath string, policyFiles []string
 	providerManifest, _ := json.Marshal([]publicschema.ProviderHandshake{
 		{ProtocolVersion: "1.0", Provider: "manual", Capabilities: []string{"review", "structured-result"}, MaxInputBytes: 250000, SupportsResume: true, NetworkAccess: "none"},
 		{ProtocolVersion: "1.0", Provider: "mock", Capabilities: []string{"review", "structured-result"}, MaxInputBytes: 250000, SupportsResume: true, NetworkAccess: "none"},
+		{ProtocolVersion: "1.0", Provider: "command", Capabilities: []string{"review", "structured-result"}, MaxInputBytes: 250000, SupportsResume: false, NetworkAccess: "unknown"},
 	})
 	providerDigest := sha256.Sum256(providerManifest)
 	result["provider-manifest"] = "sha256:" + hex.EncodeToString(providerDigest[:])

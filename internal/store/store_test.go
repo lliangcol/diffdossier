@@ -120,3 +120,21 @@ func TestArtifactContainmentAndStateTransition(t *testing.T) {
 		t.Fatalf("original run mutated: %+v", run)
 	}
 }
+
+func TestHeldStateTransitionRequiresMatchingRunLock(t *testing.T) {
+	stateStore, _ := Open(filepath.Join(t.TempDir(), "state"))
+	repository, _ := stateStore.Register(t.TempDir())
+	_, runDir, _ := stateStore.BeginRun(repository, snapshot.Seal{SnapshotID: "snap-test"})
+	if _, err := stateStore.UpdateRunStateHeld(runDir, "CONTRACTED", nil); err == nil {
+		t.Fatal("state transition without run lock was accepted")
+	}
+	lock, err := AcquireRunLock(runDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer lock.Release()
+	updated, err := stateStore.UpdateRunStateHeld(runDir, "CONTRACTED", lock)
+	if err != nil || updated.State != "CONTRACTED" {
+		t.Fatalf("run=%+v err=%v", updated, err)
+	}
+}

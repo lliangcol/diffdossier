@@ -8,11 +8,83 @@
     "task_id": {"type": "string", "minLength": 1},
     "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
     "task_input_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
-    "reviewer": {"type": "object"},
-    "coverage": {"type": "array"},
-    "findings": {"type": "array"},
-    "needs_confirmation": {"type": "array"},
-    "residual_risks": {"type": "array"},
+    "reviewer": {
+      "type": "object",
+      "required": ["provider", "model", "model_family", "pass_id", "perspective", "prompt_digest", "context_isolation"],
+      "properties": {
+        "provider": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "model_family": {"type": "string", "minLength": 1},
+        "pass_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "perspective": {"type": "string", "minLength": 1},
+        "prompt_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "context_isolation": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scope", "path_bytes_base64", "status", "evidence"],
+        "properties": {
+          "scope": {"enum": ["merge_base_to_head", "staged", "unstaged", "untracked", "explicit_ignored"]},
+          "path_bytes_base64": {"type": "string", "minLength": 1},
+          "status": {"enum": ["fully_reviewed", "mechanically_verified", "invariant_checked", "sampled", "excluded_with_reason", "not_reviewed"]},
+          "evidence": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "confidence", "category", "path_bytes_base64", "trigger_path_bytes_base64", "evidence", "impact", "remediation", "verification", "state"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["critical", "high", "medium", "low", "info"]},
+          "confidence": {"enum": ["high", "medium", "low"]},
+          "category": {"type": "string", "minLength": 1},
+          "path_bytes_base64": {"type": "string", "minLength": 1},
+          "trigger_path_bytes_base64": {"type": "string", "minLength": 1},
+          "line": {"type": "integer", "minimum": 0},
+          "evidence": {"type": "string", "minLength": 1},
+          "impact": {"type": "string", "minLength": 1},
+          "remediation": {"type": "string", "minLength": 1},
+          "verification": {"type": "string", "minLength": 1},
+          "state": {"enum": ["reported", "needs_confirmation"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "needs_confirmation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "question", "owner"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "question": {"type": "string", "minLength": 1},
+          "owner": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "residual_risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "risk", "owner", "review_trigger"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "risk": {"type": "string", "minLength": 1},
+          "owner": {"type": "string", "minLength": 1},
+          "review_trigger": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
     "status": {"enum": ["incomplete", "completed"]}
   },
   "additionalProperties": false

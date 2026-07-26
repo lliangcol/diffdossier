@@ -217,16 +217,32 @@ func (store *Store) RunDir(repositoryID, runID string) (string, error) {
 }
 
 func (store *Store) WriteRunJSON(runDir, relative string, value any) error {
+	target, err := runArtifactPath(runDir, relative)
+	if err != nil {
+		return err
+	}
+	return atomicJSON(target, value)
+}
+
+func (store *Store) ReadRunJSON(runDir, relative string, target any) error {
+	path, err := runArtifactPath(runDir, relative)
+	if err != nil {
+		return err
+	}
+	return readJSON(path, target)
+}
+
+func runArtifactPath(runDir, relative string) (string, error) {
 	clean := filepath.Clean(relative)
 	if clean == "." || filepath.IsAbs(clean) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
-		return errors.New("artifact path escapes run")
+		return "", errors.New("artifact path escapes run")
 	}
 	target := filepath.Join(runDir, clean)
 	relativeCheck, err := filepath.Rel(runDir, target)
 	if err != nil || relativeCheck == ".." || strings.HasPrefix(relativeCheck, ".."+string(filepath.Separator)) {
-		return errors.New("artifact path escapes run")
+		return "", errors.New("artifact path escapes run")
 	}
-	return atomicJSON(target, value)
+	return target, nil
 }
 
 func (store *Store) UpdateRunState(runDir, next string) (Run, error) {
@@ -235,6 +251,15 @@ func (store *Store) UpdateRunState(runDir, next string) (Run, error) {
 		return Run{}, err
 	}
 	defer lock.Release()
+	return store.UpdateRunStateHeld(runDir, next, lock)
+}
+
+// UpdateRunStateHeld advances state while the caller owns the run write lock.
+func (store *Store) UpdateRunStateHeld(runDir, next string, lock *Lock) (Run, error) {
+	expectedLock := filepath.Join(runDir, "locks", "write.lock")
+	if lock == nil || lock.file == nil || filepath.Clean(lock.path) != filepath.Clean(expectedLock) {
+		return Run{}, errors.New("valid run write lock is required")
+	}
 	var run Run
 	if err := readJSON(filepath.Join(runDir, "run.json"), &run); err != nil {
 		return Run{}, err

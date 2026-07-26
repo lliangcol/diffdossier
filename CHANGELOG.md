@@ -14,3 +14,6 @@ Versioning once releases begin.
   and the prepare command.
 - Added scoped rule and candidate-contract discovery, fail-closed L0-L4 risk,
   deterministic dependency-aware task planning, and model-free manual packets.
+- Added manual/mock Providers, an authorization-gated argv-only command
+  protocol, strict Result import, immutable review-pass indexing,
+  heterogeneous comparison, and the `record task` workflow.

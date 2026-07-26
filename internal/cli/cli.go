@@ -35,6 +35,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return runPrepare(args[1:], stdout, stderr)
 	case "plan":
 		return runPlan(args[1:], stdout, stderr)
+	case "record":
+		return runRecord(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n\n", args[0])
 		printUsage(stderr)
@@ -191,6 +193,7 @@ func printUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  diffdossier doctor [--json]")
 	fmt.Fprintln(writer, "  diffdossier prepare [--repo PATH] [--config PATH] [--state-dir PATH] [--json]")
 	fmt.Fprintln(writer, "  diffdossier plan [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier record task --task-id ID --result PATH [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier config validate [--repo PATH] [--config PATH] [--json]")
 	fmt.Fprintln(writer, "  diffdossier help")
 }

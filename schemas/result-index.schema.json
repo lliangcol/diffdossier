@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/result-index.schema.json",
+  "type": "object",
+  "required": ["schema_version", "records"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "pass_id", "perspective", "provider", "model", "model_family", "prompt_digest", "context_isolation", "result_path", "result_digest", "completed", "recorded_at"],
+        "properties": {
+          "task_id": {"type": "string", "pattern": "^task-[a-f0-9]{24}$"},
+          "pass_id": {"type": "string", "minLength": 1, "maxLength": 128},
+          "perspective": {"type": "string", "minLength": 1},
+          "provider": {"type": "string", "minLength": 1},
+          "model": {"type": "string", "minLength": 1},
+          "model_family": {"type": "string", "minLength": 1},
+          "prompt_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "context_isolation": {"type": "string", "minLength": 1},
+          "result_path": {"type": "string", "minLength": 1},
+          "result_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "completed": {"type": "boolean"},
+          "recorded_at": {"type": "string", "format": "date-time"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

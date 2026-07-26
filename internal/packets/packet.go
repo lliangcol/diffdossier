@@ -31,6 +31,7 @@ type Packet struct {
 	DataClass     publicschema.DataClass `json:"data_class"`
 	Status        string                 `json:"status"`
 	Prompt        string                 `json:"prompt"`
+	PromptDigest  string                 `json:"prompt_digest"`
 	Task          planner.Task           `json:"task"`
 	Files         []FileReference        `json:"files"`
 	TotalBytes    int64                  `json:"total_bytes"`
@@ -45,6 +46,7 @@ func Build(task planner.Task, dataClass publicschema.DataClass) (Packet, error) 
 		DataClass: dataClass, Status: "ready_for_review", Prompt: ReviewPrompt,
 		Task: task, TotalBytes: task.TotalBytes, Files: []FileReference{},
 	}
+	packet.PromptDigest = DigestPrompt(packet.Prompt)
 	if task.Oversized {
 		packet.Status = "incomplete"
 	}
@@ -69,4 +71,9 @@ func Build(task planner.Task, dataClass publicschema.DataClass) (Packet, error) 
 	digest := sha256.Sum256(canonical)
 	packet.TaskInputHash = "sha256:" + hex.EncodeToString(digest[:])
 	return packet, nil
+}
+
+func DigestPrompt(prompt string) string {
+	digest := sha256.Sum256([]byte(prompt))
+	return "sha256:" + hex.EncodeToString(digest[:])
 }
