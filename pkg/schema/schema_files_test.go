@@ -12,8 +12,8 @@ func TestPublishedSchemasAreValidJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(paths) < 7 {
-		t.Fatalf("found %d schemas, want at least 7", len(paths))
+	if len(paths) < 13 {
+		t.Fatalf("found %d schemas, want at least 13", len(paths))
 	}
 	for _, path := range paths {
 		t.Run(filepath.Base(path), func(t *testing.T) {

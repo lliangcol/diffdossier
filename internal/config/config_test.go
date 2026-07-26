@@ -10,6 +10,7 @@ import (
 const validConfig = `schema_version = 1
 baseline = "refs/remotes/origin/main"
 include_untracked = true
+include_ignored = [".generated/report.json"]
 
 [review]
 max_files_per_task = 8
@@ -59,6 +60,7 @@ func TestLoadRejectsUnknownAndInvalid(t *testing.T) {
 		{"schema", strings.Replace(validConfig, "schema_version = 1", "schema_version = 2", 1), "unsupported schema_version"},
 		{"baseline", strings.Replace(validConfig, "baseline = \"refs/remotes/origin/main\"\n", "", 1), "baseline is required"},
 		{"cache", strings.Replace(validConfig, "worktree_deterministic", "forever", 1), "invalid cache_class"},
+		{"duplicate", strings.Replace(validConfig, "schema_version = 1", "schema_version = 1\nschema_version = 1", 1), "duplicate field"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

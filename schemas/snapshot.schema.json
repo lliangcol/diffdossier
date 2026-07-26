@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/snapshot.schema.json",
+  "type": "object",
+  "required": ["schema_version", "snapshot_id", "captured_at", "revisions", "index_tree", "git_config", "input_digests", "inventory"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
+    "captured_at": {"type": "string", "format": "date-time"},
+    "revisions": {"type": "object"},
+    "index_tree": {"type": "string", "pattern": "^[a-f0-9]{40,64}$"},
+    "git_config": {"type": "object", "additionalProperties": {"type": "string"}},
+    "input_digests": {"type": "object", "additionalProperties": {"type": "string"}},
+    "inventory": {"$ref": "inventory.schema.json"}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/inventory.schema.json",
+  "type": "object",
+  "required": ["schema_version", "entries"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scope", "status", "path", "kind", "size", "binary"],
+        "properties": {
+          "scope": {"enum": ["merge_base_to_head", "staged", "unstaged", "untracked", "ignored_explicit"]},
+          "status": {"type": "string", "minLength": 1},
+          "path": {"$ref": "#/$defs/path"},
+          "old_path": {"$ref": "#/$defs/path"},
+          "kind": {"enum": ["missing", "regular", "binary", "symlink", "submodule", "lfs_pointer"]},
+          "mode": {"type": "string"},
+          "size": {"type": "integer", "minimum": 0},
+          "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "binary": {"type": "boolean"},
+          "link_target": {"$ref": "#/$defs/path"},
+          "git_object": {"type": "string"},
+          "lfs_oid": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "lfs_size": {"type": "integer", "minimum": 0},
+          "submodule_dirty": {"type": "boolean"},
+          "previous_kind": {"enum": ["regular", "binary", "symlink", "submodule", "lfs_pointer"]},
+          "previous_mode": {"type": "string"},
+          "previous_size": {"type": "integer", "minimum": 0},
+          "previous_content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "previous_git_object": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "path": {
+      "type": "object",
+      "required": ["path_bytes_base64"],
+      "properties": {
+        "path_bytes_base64": {"type": "string", "contentEncoding": "base64"},
+        "path_utf8": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

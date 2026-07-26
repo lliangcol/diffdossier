@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/run.schema.json",
+  "type": "object",
+  "required": ["schema_version", "run_id", "repository_id", "snapshot_id", "state", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string", "pattern": "^run-[a-f0-9]{24}$"},
+    "repository_id": {"type": "string", "pattern": "^repo-[a-f0-9]{32}$"},
+    "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
+    "state": {"enum": ["NEW", "PREPARED", "CONTRACTED", "REVIEWING", "REVIEWED", "FIX_AUTHORIZED", "MUTATED", "GATED", "REREVIEWED", "FINALIZED", "EXPORTED", "BLOCKED"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

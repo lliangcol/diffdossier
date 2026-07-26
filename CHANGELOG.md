@@ -9,3 +9,6 @@ Versioning once releases begin.
 - Added strict version-1 configuration validation, stable error/JSON contracts,
   platform path resolution, public JSON Schemas, and content-bound policy types.
 - Added project governance, contribution, security, and release-boundary docs.
+- Added local-only Git intake, byte-accurate changed-path inventory,
+  deterministic snapshots, content-addressed state, locking, resume metadata,
+  and the prepare command.

@@ -1,6 +1,7 @@
 schema_version = 1
 baseline = "refs/remotes/origin/main"
 include_untracked = true
+include_ignored = []
 
 [review]
 max_files_per_task = 8

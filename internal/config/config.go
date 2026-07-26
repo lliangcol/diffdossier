@@ -16,6 +16,7 @@ type Config struct {
 	SchemaVersion    int
 	Baseline         string
 	IncludeUntracked bool
+	IncludeIgnored   []string
 	Review           Review
 	State            State
 	Risk             Risk
@@ -64,6 +65,8 @@ func Load(path string) (Config, error) {
 	cfg := Default()
 	section := ""
 	gateIndex := -1
+	seenFields := map[string]bool{}
+	seenSections := map[string]bool{}
 	scanner := bufio.NewScanner(file)
 	for lineNumber := 1; scanner.Scan(); lineNumber++ {
 		line := strings.TrimSpace(stripComment(scanner.Text()))
@@ -87,6 +90,10 @@ func Load(path string) (Config, error) {
 			if section != "review" && section != "state" && section != "risk" {
 				return Config{}, lineError(lineNumber, "unknown section "+section)
 			}
+			if seenSections[section] {
+				return Config{}, lineError(lineNumber, "duplicate section "+section)
+			}
+			seenSections[section] = true
 			gateIndex = -1
 			continue
 		}
@@ -94,7 +101,13 @@ func Load(path string) (Config, error) {
 		if !ok {
 			return Config{}, lineError(lineNumber, "expected key = value")
 		}
-		if err := assign(&cfg, section, gateIndex, strings.TrimSpace(key), strings.TrimSpace(raw)); err != nil {
+		key = strings.TrimSpace(key)
+		fieldID := fmt.Sprintf("%s/%d/%s", section, gateIndex, key)
+		if seenFields[fieldID] {
+			return Config{}, lineError(lineNumber, "duplicate field "+key)
+		}
+		seenFields[fieldID] = true
+		if err := assign(&cfg, section, gateIndex, key, strings.TrimSpace(raw)); err != nil {
 			return Config{}, lineError(lineNumber, err.Error())
 		}
 	}
@@ -122,6 +135,12 @@ func (c Config) Validate() error {
 	}
 	if c.State.RetentionDays < 1 {
 		return errors.New("state.retention_days must be positive")
+	}
+	for _, path := range c.IncludeIgnored {
+		clean := strings.ReplaceAll(path, "\\", "/")
+		if clean == "" || strings.HasPrefix(clean, "/") || clean == ".." || strings.HasPrefix(clean, "../") {
+			return fmt.Errorf("include_ignored path %q must stay repository-relative", path)
+		}
 	}
 	seen := map[string]bool{}
 	for _, gate := range c.Gates {
@@ -156,6 +175,8 @@ func assign(cfg *Config, section string, gateIndex int, key, raw string) error {
 		return parseString(raw, &cfg.Baseline)
 	case "include_untracked":
 		return parseBool(raw, &cfg.IncludeUntracked)
+	case "include_ignored":
+		return parseStrings(raw, &cfg.IncludeIgnored)
 	case "review.max_files_per_task":
 		return parseInt(raw, &cfg.Review.MaxFilesPerTask)
 	case "review.max_packet_bytes":

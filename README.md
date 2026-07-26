@@ -9,8 +9,9 @@ The repository is in early Phase 1 implementation. No public release, stable CLI
 
 - The initial CLI foundation is published on `main` at `github.com/lliangcol/diffdossier`; no release or stability promise exists yet.
 - The Go module path is `github.com/lliangcol/diffdossier`.
-- The current CLI exposes version, doctor, and strict config validate; the
-  remaining workflow is under active implementation.
+- The current CLI exposes version, doctor, strict config validate, and
+  repository-external prepare snapshots; the remaining workflow is under
+  active implementation.
 - The compatibility spike uses only the Go standard library and the local Git executable.
 - No networked provider, project-defined command, automatic fix, remote write/CI workflow, or public export is enabled.
 
@@ -22,9 +23,10 @@ go vet ./...
 go run ./cmd/diffdossier version --json
 go run ./cmd/diffdossier doctor --json
 go run ./cmd/diffdossier config validate --repo . --config diffdossier.example.toml --json
+go run ./cmd/diffdossier prepare --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
 ```
 
-See [configuration](docs/configuration.md), [the architecture decision
+See [configuration](docs/configuration.md), [snapshot semantics](docs/snapshots.md), [the architecture decision
 records](docs/adr/README.md), and [the platform compatibility
 spike](docs/platform-compatibility.md).
 

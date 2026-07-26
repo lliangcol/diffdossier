@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/event.schema.json",
+  "type": "object",
+  "required": ["sequence", "type", "recorded_at", "payload", "event_hash"],
+  "properties": {
+    "sequence": {"type": "integer", "minimum": 1},
+    "type": {"type": "string", "minLength": 1},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "payload": {},
+    "previous_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "event_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}
