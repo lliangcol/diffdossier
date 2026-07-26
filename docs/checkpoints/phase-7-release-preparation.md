@@ -44,5 +44,37 @@
 - GitHub-hosted signed attestation and remote required checks do not exist.
 
 Therefore this checkpoint is not Release evidence and does not authorize a
-public beta. The local candidate verification record must be appended only after
-running against the clean committed implementation.
+public beta.
+
+## Clean-commit candidate rehearsal
+
+The local rehearsal ran twice from clean commit
+`f2ae86965f2dc044669594ccd71fa95f27e35163` with candidate version
+`phase7-f2ae869` and controlled builder `go1.26.0`.
+
+- Both builds completed all six target archives with module network access and
+  automatic toolchain download disabled.
+- `releaseprep verify` covered all nine checksum entries for both builds.
+- The first build was extracted in an isolated temporary directory; native
+  macOS/amd64 `version --json` and `doctor --json` both passed and the embedded
+  version/commit matched the manifest.
+- `cmp` confirmed the two independently prepared `SHA256SUMS` files were
+  byte-identical on this host and toolchain. This is same-environment
+  reproducibility evidence, not a cross-host guarantee.
+
+Recorded digests:
+
+```text
+544f98cf228c23f4bfd896658857e161074379c628f1ecd53a1a65407fd15dbd  diffdossier.spdx.json
+faf6b53ca3007734850d646ea86608980b97ad7729460f12edf54e1c99e7be9b  diffdossier_phase7-f2ae869_darwin_amd64.tar.gz
+5f331778fea81d979538853dc43de884182c63b1be3052a70bd335bb8bbe9356  diffdossier_phase7-f2ae869_darwin_arm64.tar.gz
+164b8ad693eba39c18770b7d8421daa4958e30b637730628d18139779e53ea82  diffdossier_phase7-f2ae869_linux_amd64.tar.gz
+907b9fcb1874af817062894c5fb98c6822f1ebe77b9c2f26ca72e24d01d73b4c  diffdossier_phase7-f2ae869_linux_arm64.tar.gz
+23007c124567889e61f14e4a8802fb4cca6dd42279eead88c0fa9f0c1d55d00b  diffdossier_phase7-f2ae869_windows_amd64.zip
+fc3022378c67fbea8bcdac5a05b806390d2c8db2cfe6f9145d3fd23a028b8b29  diffdossier_phase7-f2ae869_windows_arm64.zip
+46362780265de448762fd5900cc0842d61ff8258c934a66b5e8a8f9379ddf0f9  provenance.json
+6ca653c59f2816ae21d0e21cec4e2f22e95715adcb111861767b4ec9a7634f36  release-manifest.json
+```
+
+These candidate artifacts were not committed, uploaded, attested, tagged, or
+released. G-03, G-07, and native-platform evidence gaps remain unchanged.
