@@ -3,8 +3,8 @@
 - Date: 2026-07-26
 - Scope: T1.1 local implementation only
 - Module: `github.com/lliangcol/diffdossier`
-- Commit or tag: none
-- Remote write: none
+- Commit: `217875ba55df10be4d49eee934236b09012cc9c9`
+- Remote write: pushed to `origin/main`
 
 ## Implemented
 
@@ -31,7 +31,7 @@ Two in-scope findings were fixed during semantic review:
 1. `version --help` returned usage error 2 instead of success.
 2. Text `version` output ignored stdout write failures and could return false success.
 
-The bundled review-fix-loop snapshot could not seal an unborn repository because it invokes `git diff HEAD`. This repository has no first commit, and commit authorization was not inferred. All conclusions in this checkpoint are therefore local manual review and Gate evidence, not a formal review-fix-loop finalized record.
+Before the first commit, the bundled review-fix-loop snapshot could not seal the unborn repository because it invokes `git diff HEAD`. After commit and push, clean baseline snapshot `snap-8c9e91b6b5ae` sealed HEAD `217875ba55df10be4d49eee934236b09012cc9c9`; its configured whitespace, `go test ./...`, and `go vet ./...` Gates passed. This clean baseline does not retroactively replace the manual semantic review of the initial commit.
 
 ## Not verified
 
@@ -39,8 +39,8 @@ The bundled review-fix-loop snapshot could not seal an unborn repository because
 - Go 1.25 runtime compatibility.
 - Current security-patched Go toolchain; local evidence used Go 1.26.0 while newer security patch releases exist.
 - Stable CLI/config/JSON Schema compatibility beyond the implemented `version` output.
-- Remote CI, protected-branch settings, commit, push, tag, package, SBOM, provenance, or release.
+- Remote CI, protected-branch settings, tag, package, SBOM, provenance, or release.
 
 ## Next slice
 
-After the first commit establishes `HEAD`, rerun the formal fresh snapshot. Then continue T1.2 with error-envelope and Schema definitions without adding third-party dependencies.
+Use the sealed clean baseline for the next fresh change snapshot, then continue T1.2 with error-envelope and Schema definitions without adding third-party dependencies.

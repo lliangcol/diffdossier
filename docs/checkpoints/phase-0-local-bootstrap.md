@@ -1,9 +1,11 @@
 # Phase 0 local bootstrap checkpoint
 
+This is a historical checkpoint captured before the first implementation commit.
+
 - Date: 2026-07-26
 - Repository: local `diffdossier` Git repository on branch `main`
 - Remote: `git@github.com:lliangcol/diffdossier.git`
-- Commit or tag: none
+- Commit or tag at capture time: none
 - Public module path: `github.com/lliangcol/diffdossier`
 
 ## Task status
@@ -17,8 +19,8 @@
 
 ## Authorization boundary
 
-The current execution authorizes local bootstrap work and records the user-created GitHub repository through G-02. It does not authorize publishing a module or package, committing, pushing, running a networked provider, executing target-repository commands, or creating public bundles.
+At capture time, the execution authorized local bootstrap work and recorded the user-created GitHub repository through G-02. It did not yet authorize publishing a module or package, committing, pushing, running a networked provider, executing target-repository commands, or creating public bundles.
 
 ## Next boundary
 
-Phase 1 can proceed locally with the confirmed module path. A first commit and push remain separate explicit actions. GitHub Actions, protected-branch settings, and releases remain behind G-07.
+The first implementation commit and push were completed later and are recorded in the Phase 1 CLI foundation checkpoint. GitHub Actions, protected-branch settings, and releases remain behind G-07.

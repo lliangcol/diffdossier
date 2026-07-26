@@ -6,7 +6,7 @@ The repository is in early Phase 1 implementation. No public release, stable CLI
 
 ## Current boundaries
 
-- The public repository is `github.com/lliangcol/diffdossier`; local changes have not been committed or pushed.
+- The initial CLI foundation is published on `main` at `github.com/lliangcol/diffdossier`; no release or stability promise exists yet.
 - The Go module path is `github.com/lliangcol/diffdossier`.
 - The initial CLI exposes only `version` and help.
 - The compatibility spike uses only the Go standard library and the local Git executable.
