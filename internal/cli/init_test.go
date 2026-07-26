@@ -69,16 +69,16 @@ func TestInitCreatesMinimalCommandFreeConfig(t *testing.T) {
 func TestInitRefusesOverwriteAndSymlink(t *testing.T) {
 	tests := []struct {
 		name    string
-		prepare func(string) []byte
+		prepare func(*testing.T, string) []byte
 	}{
-		{name: "regular", prepare: func(path string) []byte {
+		{name: "regular", prepare: func(t *testing.T, path string) []byte {
 			content := []byte("do not replace\n")
 			if err := os.WriteFile(path, content, 0o600); err != nil {
 				t.Fatal(err)
 			}
 			return content
 		}},
-		{name: "symlink", prepare: func(path string) []byte {
+		{name: "symlink", prepare: func(t *testing.T, path string) []byte {
 			if runtime.GOOS == "windows" {
 				t.Skip("symlink setup requires platform privileges")
 			}
@@ -97,7 +97,7 @@ func TestInitRefusesOverwriteAndSymlink(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			repo := initializedRepo(t)
 			path := filepath.Join(repo, "diffdossier.toml")
-			original := test.prepare(path)
+			original := test.prepare(t, path)
 			var stdout, stderr bytes.Buffer
 			code := Run([]string{"init", "--repo", repo, "--baseline", "HEAD", "--json"}, &stdout, &stderr)
 			if code != ExitUsage || !strings.Contains(stdout.String(), "DD_INIT_EXISTS") {

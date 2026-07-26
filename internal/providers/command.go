@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -276,7 +277,7 @@ func validateExecutable(path string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	if !info.Mode().IsRegular() || info.Mode()&0o111 == 0 {
+	if !info.Mode().IsRegular() || runtime.GOOS != "windows" && info.Mode()&0o111 == 0 {
 		return "", "", errors.New("command executable must be a regular executable file")
 	}
 	content, err := os.ReadFile(clean)
