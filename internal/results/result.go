@@ -42,12 +42,56 @@ type Finding struct {
 	Category               string `json:"category"`
 	PathBytesBase64        string `json:"path_bytes_base64"`
 	TriggerPathBytesBase64 string `json:"trigger_path_bytes_base64"`
-	Line                   int    `json:"line"`
+	Line                   int    `json:"line,omitempty"`
 	Evidence               string `json:"evidence"`
 	Impact                 string `json:"impact"`
 	Remediation            string `json:"remediation"`
 	Verification           string `json:"verification"`
 	State                  string `json:"state"`
+	linePresenceKnown      bool
+	linePresent            bool
+}
+
+// UnmarshalJSON records whether line was present so legacy 1.0 results that
+// omitted the field remain distinguishable from current 1.1 results with an
+// explicit zero line.
+func (finding *Finding) UnmarshalJSON(content []byte) error {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(content, &fields); err != nil {
+		return err
+	}
+	line, present := fields["line"]
+	if present && bytes.Equal(bytes.TrimSpace(line), []byte("null")) {
+		return errors.New("finding line cannot be null")
+	}
+	type plainFinding Finding
+	var decoded plainFinding
+	decoder := json.NewDecoder(bytes.NewReader(content))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&decoded); err != nil {
+		return err
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		return errors.New("finding must contain exactly one JSON object")
+	}
+	*finding = Finding(decoded)
+	finding.linePresenceKnown = true
+	finding.linePresent = present
+	return nil
+}
+
+// MarshalJSON preserves the omission of line in parsed legacy 1.0 results,
+// while programmatic findings and parsed 1.1 findings always emit the field.
+func (finding Finding) MarshalJSON() ([]byte, error) {
+	type plainFinding Finding
+	if finding.linePresenceKnown && !finding.linePresent {
+		return json.Marshal(plainFinding(finding))
+	}
+	return json.Marshal(struct {
+		plainFinding
+		Line int `json:"line"`
+	}{plainFinding: plainFinding(finding), Line: finding.Line})
 }
 
 type Confirmation struct {
@@ -107,7 +151,7 @@ func Parse(reader io.Reader) (Result, error) {
 }
 
 func Validate(result Result, task planner.Task, taskInputHash, promptDigest string) (Validation, error) {
-	if result.SchemaVersion != "1.0" {
+	if result.SchemaVersion != "1.0" && result.SchemaVersion != "1.1" {
 		return Validation{}, errors.New("unsupported result schema_version")
 	}
 	if !validDigest(result.SnapshotID, "snap-") || !validDigest(result.TaskInputHash, "sha256:") {
@@ -162,6 +206,9 @@ func Validate(result Result, task planner.Task, taskInputHash, promptDigest stri
 		if !stringIn(finding.Severity, []string{"critical", "high", "medium", "low", "info"}) ||
 			!stringIn(finding.Confidence, []string{"high", "medium", "low"}) {
 			return Validation{}, errors.New("finding severity or confidence is invalid")
+		}
+		if result.SchemaVersion == "1.1" && finding.linePresenceKnown && !finding.linePresent {
+			return Validation{}, errors.New("result schema_version 1.1 requires finding line")
 		}
 		if finding.Line < 0 {
 			return Validation{}, errors.New("finding line cannot be negative")

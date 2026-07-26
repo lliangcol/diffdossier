@@ -159,7 +159,7 @@ func TestCommandProviderHelper(t *testing.T) {
 		os.Exit(3)
 	}
 	_ = json.NewEncoder(os.Stdout).Encode(results.Result{
-		SchemaVersion: "1.0", TaskID: request.Packet.TaskID, SnapshotID: request.Packet.SnapshotID,
+		SchemaVersion: "1.1", TaskID: request.Packet.TaskID, SnapshotID: request.Packet.SnapshotID,
 		TaskInputHash: request.Packet.TaskInputHash,
 		Reviewer: results.Reviewer{
 			Provider: "fixture-command", Model: "fixture", ModelFamily: "fixture",

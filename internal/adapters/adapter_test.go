@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -30,7 +31,26 @@ func TestReviewResultSchemaMeetsStructuredOutputSubset(t *testing.T) {
 	if err := json.Unmarshal(content, &root); err != nil {
 		t.Fatal(err)
 	}
-	assertStructuredOutputSchema(t, "$", root)
+	if issues := structuredOutputSchemaIssues("$", root); len(issues) != 0 {
+		t.Fatalf("schema is outside supported structured-output subset:\n%s", strings.Join(issues, "\n"))
+	}
+}
+
+func TestStructuredOutputSchemaCheckerRejectsUnsupportedShapes(t *testing.T) {
+	tests := []struct {
+		name string
+		node any
+	}{
+		{"object without properties", map[string]any{"type": "object", "required": []any{}, "additionalProperties": false}},
+		{"tuple items", map[string]any{"type": "array", "items": []any{map[string]any{"type": "string"}}}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if issues := structuredOutputSchemaIssues("$", test.node); len(issues) == 0 {
+				t.Fatal("unsupported structured-output shape was accepted")
+			}
+		})
+	}
 }
 
 func TestCodexAdapterUsesIsolatedReadonlyInvocationAndBindsResult(t *testing.T) {
@@ -158,7 +178,7 @@ func adapterFixture(t *testing.T, provider string) ([]string, []byte, packets.Pa
 func validProviderResult(t *testing.T, packet packets.Packet) []byte {
 	t.Helper()
 	result := results.Result{
-		SchemaVersion: "1.0", TaskID: packet.TaskID, SnapshotID: packet.SnapshotID, TaskInputHash: packet.TaskInputHash,
+		SchemaVersion: "1.1", TaskID: packet.TaskID, SnapshotID: packet.SnapshotID, TaskInputHash: packet.TaskInputHash,
 		Reviewer: results.Reviewer{Provider: "untrusted", Model: "untrusted", ModelFamily: "untrusted", PassID: "untrusted", Perspective: "correctness", PromptDigest: packet.PromptDigest, ContextIsolation: "untrusted"},
 		Coverage: []results.Coverage{{Scope: string(packet.Task.Paths[0].Scope), PathBytesBase64: packet.Task.Paths[0].PathBytesBase64, Status: "fully_reviewed", Evidence: "reviewed exact synthetic packet"}},
 		Findings: []results.Finding{}, NeedsConfirmation: []results.Confirmation{}, ResidualRisks: []results.ResidualRisk{}, Status: "completed",
@@ -180,18 +200,26 @@ func fileSHA256(t *testing.T, path string) string {
 	return "sha256:" + hex.EncodeToString(digest[:])
 }
 
-func assertStructuredOutputSchema(t *testing.T, path string, value any) {
-	t.Helper()
+func structuredOutputSchemaIssues(path string, value any) []string {
 	node, ok := value.(map[string]any)
 	if !ok {
-		return
+		return []string{fmt.Sprintf("%s schema node must be an object", path)}
 	}
+	var issues []string
 	if _, hasConst := node["const"]; hasConst && node["type"] == nil {
-		t.Errorf("%s has const without type", path)
+		issues = append(issues, fmt.Sprintf("%s has const without type", path))
 	}
-	if properties, ok := node["properties"].(map[string]any); ok {
+	propertiesValue, hasProperties := node["properties"]
+	properties, propertiesAreObject := propertiesValue.(map[string]any)
+	if node["type"] == "object" && !propertiesAreObject {
+		issues = append(issues, fmt.Sprintf("%s object must define properties", path))
+	}
+	if hasProperties && !propertiesAreObject {
+		issues = append(issues, fmt.Sprintf("%s properties must be an object", path))
+	}
+	if propertiesAreObject {
 		if node["type"] != "object" || node["additionalProperties"] != false {
-			t.Errorf("%s object must set type=object and additionalProperties=false", path)
+			issues = append(issues, fmt.Sprintf("%s object must set type=object and additionalProperties=false", path))
 		}
 		required := map[string]bool{}
 		if list, ok := node["required"].([]any); ok {
@@ -199,15 +227,22 @@ func assertStructuredOutputSchema(t *testing.T, path string, value any) {
 				name, _ := item.(string)
 				required[name] = true
 			}
+		} else {
+			issues = append(issues, fmt.Sprintf("%s object must define required", path))
 		}
 		for name, property := range properties {
 			if !required[name] {
-				t.Errorf("%s property %q is not required", path, name)
+				issues = append(issues, fmt.Sprintf("%s property %q is not required", path, name))
 			}
-			assertStructuredOutputSchema(t, path+".properties."+name, property)
+			issues = append(issues, structuredOutputSchemaIssues(path+".properties."+name, property)...)
 		}
 	}
 	if items, ok := node["items"]; ok {
-		assertStructuredOutputSchema(t, path+".items", items)
+		if _, tuple := items.([]any); tuple {
+			issues = append(issues, fmt.Sprintf("%s tuple-form items are unsupported", path))
+		} else {
+			issues = append(issues, structuredOutputSchemaIssues(path+".items", items)...)
+		}
 	}
+	return issues
 }

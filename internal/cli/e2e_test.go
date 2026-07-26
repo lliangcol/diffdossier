@@ -202,7 +202,7 @@ func TestCLICommandProviderHelper(t *testing.T) {
 		})
 	}
 	_ = json.NewEncoder(os.Stdout).Encode(results.Result{
-		SchemaVersion: "1.0", TaskID: request.Packet.TaskID,
+		SchemaVersion: "1.1", TaskID: request.Packet.TaskID,
 		SnapshotID: request.Packet.SnapshotID, TaskInputHash: request.Packet.TaskInputHash,
 		Reviewer: results.Reviewer{
 			Provider: "cli-fixture", Model: "fixture", ModelFamily: "command-fixture",

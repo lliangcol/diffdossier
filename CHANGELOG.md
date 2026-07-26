@@ -47,5 +47,7 @@ Versioning once releases begin.
   confirmation, plus packaged Codex and API-key-only Claude Code adapters that
   bind vendor binary/version, model, Result Schema, pass, perspective, command
   trust, and egress authorization.
+- Versioned the current Provider Result Schema as 1.1 with explicit finding-line
+  presence while retaining digest-stable reads of legacy 1.0 results.
 - Recorded Liu Liang as copyright holder and the exact prospective DCO history
   exception through commit `98856de56e6543b4806d899c611a2744f76686c0`.
