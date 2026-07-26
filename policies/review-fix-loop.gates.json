@@ -1,0 +1,116 @@
+{
+  "version": 2,
+  "seal_environment_keys": [
+    "PATH"
+  ],
+  "scheduler": {
+    "max_workers": 2,
+    "resource_limits": {
+      "cpu": 2,
+      "io": 2,
+      "exclusive": 1,
+      "network": 1,
+      "external": 1
+    }
+  },
+  "rule_files": [],
+  "modes": {
+    "normal_loop": {
+      "scope": [
+        "staged",
+        "unstaged",
+        "untracked"
+      ],
+      "require_fresh_snapshot": true,
+      "closure_policy": "impact_complete",
+      "full_gate_ids": [
+        "working-tree-whitespace",
+        "go-test",
+        "go-vet"
+      ]
+    }
+  },
+  "slices": [
+    {
+      "id": "go-cli",
+      "paths": [
+        "go.mod",
+        "cmd/**",
+        "internal/**"
+      ],
+      "risk": "medium"
+    },
+    {
+      "id": "compatibility",
+      "paths": [
+        "spikes/**"
+      ],
+      "risk": "medium"
+    },
+    {
+      "id": "docs-governance",
+      "paths": [
+        ".gitattributes",
+        ".gitignore",
+        "README.md",
+        "docs/**",
+        "policies/**"
+      ],
+      "risk": "medium"
+    }
+  ],
+  "gates": [
+    {
+      "id": "working-tree-whitespace",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "scope": "unstaged",
+      "blocking": true,
+      "timeout_seconds": 60,
+      "covers_slices": [
+        "go-cli",
+        "compatibility",
+        "docs-governance"
+      ],
+      "cache_class": "worktree_deterministic",
+      "resource_class": "io"
+    },
+    {
+      "id": "go-test",
+      "argv": [
+        "go",
+        "test",
+        "./..."
+      ],
+      "scope": "all",
+      "blocking": true,
+      "timeout_seconds": 300,
+      "covers_slices": [
+        "go-cli",
+        "compatibility"
+      ],
+      "cache_class": "worktree_deterministic",
+      "resource_class": "cpu"
+    },
+    {
+      "id": "go-vet",
+      "argv": [
+        "go",
+        "vet",
+        "./..."
+      ],
+      "scope": "all",
+      "blocking": true,
+      "timeout_seconds": 300,
+      "covers_slices": [
+        "go-cli",
+        "compatibility"
+      ],
+      "cache_class": "worktree_deterministic",
+      "resource_class": "cpu"
+    }
+  ]
+}
