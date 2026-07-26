@@ -3,7 +3,8 @@
 - Evidence date: 2026-07-27
 - Status: manual flow plus opt-in automatic adapter
 - Automatic adapter: implemented in `diffdossier-provider`; publication authorized for the beta release
-- Live model smoke: requires an exact command plan, trust binding, and egress grant for every packet
+- Live model smoke: passed for the evidence below; every new packet still
+  requires its own exact command plan, trust binding, and egress grant
 - Locally observed CLI: `codex-cli 0.146.0-alpha.3.1`
 
 ## Verified capability
@@ -37,6 +38,24 @@ an authorization-gated `command` Provider. Its arguments must include
 SHA-256 digests, exact `--version` output, model, pass ID, and perspective.
 DiffDossier first emits the complete command plan without executing it; only a
 matching private trust binding and egress grant allow the call.
+
+## Live compatibility evidence
+
+On 2026-07-27, an authorized `public_synthetic` smoke pinned the observed CLI,
+`gpt-5.6-sol`, the adapter binary, and Result Schema 1.1. The serialized packet
+was 2,204 bytes, contained one synthetic README path, and produced zero
+sensitive-data scan findings. The core recorded the attempt sequence as
+planned, started, and completed, then accepted a completed result with exact
+task, snapshot, input, prompt, model, pass, and perspective bindings. Its
+result digest was
+`sha256:058f67aecb08ee4e0ccd329b3f27807daf2992e3c779391d0c7256bfb38a2dcd`.
+
+The accepted result reported exact full coverage and no findings. This proves
+the pinned CLI/adapter/Schema transport and validation path for that synthetic
+input; it is not evidence that future reviews are correct or that a different
+CLI, model, Schema, packet, or credential is compatible. The run remains local
+operator evidence; publishing its digest alone does not make it independently
+verifiable by third parties.
 
 ## Terms and data controls
 
