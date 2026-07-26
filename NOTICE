@@ -1,0 +1,8 @@
+DiffDossier
+Copyright 2026 DiffDossier contributors
+
+This product includes software developed by the DiffDossier contributors.
+
+The current source tree has no third-party runtime dependencies. Go standard
+library notices and licenses are distributed with the Go toolchain, not copied
+into DiffDossier release artifacts.

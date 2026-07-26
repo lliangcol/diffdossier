@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/provider-handshake.schema.json",
+  "type": "object",
+  "required": ["protocol_version", "provider", "capabilities", "max_input_bytes", "supports_resume", "network_access"],
+  "properties": {
+    "protocol_version": {"const": "1.0"},
+    "provider": {"type": "string", "minLength": 1},
+    "capabilities": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "max_input_bytes": {"type": "integer", "minimum": 1},
+    "supports_resume": {"type": "boolean"},
+    "network_access": {"enum": ["none", "required", "unknown"]}
+  },
+  "additionalProperties": false
+}

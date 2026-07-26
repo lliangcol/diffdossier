@@ -36,7 +36,8 @@
       "paths": [
         "go.mod",
         "cmd/**",
-        "internal/**"
+        "internal/**",
+        "pkg/**"
       ],
       "risk": "medium"
     },
@@ -53,8 +54,16 @@
         ".gitattributes",
         ".gitignore",
         "README.md",
+        "CHANGELOG.md",
+        "CODE_OF_CONDUCT.md",
+        "CONTRIBUTING.md",
+        "GOVERNANCE.md",
+        "NOTICE",
+        "SECURITY.md",
         "docs/**",
-        "policies/**"
+        "policies/**",
+        "schemas/**",
+        "diffdossier.example.toml"
       ],
       "risk": "medium"
     }

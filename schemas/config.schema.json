@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/config.schema.json",
+  "title": "diffdossier.toml logical model",
+  "type": "object",
+  "required": ["schema_version", "baseline"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "baseline": {"type": "string", "minLength": 1},
+    "include_untracked": {"type": "boolean"},
+    "review": {"type": "object"},
+    "state": {"type": "object"},
+    "risk": {"type": "object"},
+    "gates": {"type": "array"}
+  },
+  "additionalProperties": false
+}

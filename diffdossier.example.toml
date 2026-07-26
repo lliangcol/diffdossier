@@ -1,0 +1,22 @@
+schema_version = 1
+baseline = "refs/remotes/origin/main"
+include_untracked = true
+
+[review]
+max_files_per_task = 8
+max_packet_bytes = 250000
+default_provider = "manual"
+
+[state]
+retention_days = 30
+
+[risk]
+policy_files = [".diffdossier/risk.toml"]
+
+[[gates]]
+id = "unit-test"
+argv = ["go", "test", "./..."]
+timeout_seconds = 900
+blocking = true
+cache_class = "worktree_deterministic"
+final_always = true

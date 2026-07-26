@@ -1,0 +1,11 @@
+# Changelog
+
+All notable changes will be documented here. The project follows Semantic
+Versioning once releases begin.
+
+## Unreleased
+
+- Added the initial Go CLI and build metadata.
+- Added strict version-1 configuration validation, stable error/JSON contracts,
+  platform path resolution, public JSON Schemas, and content-bound policy types.
+- Added project governance, contribution, security, and release-boundary docs.

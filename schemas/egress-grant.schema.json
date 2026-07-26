@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/egress-grant.schema.json",
+  "type": "object",
+  "required": ["provider", "snapshot_id", "task_input_digest", "data_class", "max_bytes", "expires_at"],
+  "properties": {
+    "provider": {"type": "string", "minLength": 1},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "task_input_digest": {"type": "string", "minLength": 1},
+    "data_class": {"enum": ["public_synthetic", "public_project", "private_project"]},
+    "max_bytes": {"type": "integer", "minimum": 0},
+    "expires_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

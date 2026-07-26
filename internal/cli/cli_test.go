@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -121,6 +123,51 @@ func TestVersionOutputFailureIsInternalError(t *testing.T) {
 				t.Fatalf("stderr = %q, want output failure diagnostic", stderr.String())
 			}
 		})
+	}
+}
+
+func TestConfigValidateJSON(t *testing.T) {
+	repo := t.TempDir()
+	content := "schema_version = 1\nbaseline = \"HEAD~1\"\n"
+	if err := os.WriteFile(filepath.Join(repo, "diffdossier.toml"), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"config", "validate", "--repo", repo, "--json"}, &stdout, &stderr)
+	if code != ExitOK {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	var envelope map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil {
+		t.Fatal(err)
+	}
+	if envelope["schema_version"] != "1.0" || envelope["status"] != "ok" {
+		t.Fatalf("unexpected envelope: %#v", envelope)
+	}
+}
+
+func TestConfigValidateFailureJSON(t *testing.T) {
+	repo := t.TempDir()
+	if err := os.WriteFile(filepath.Join(repo, "diffdossier.toml"), []byte("schema_version = 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"config", "validate", "--repo", repo, "--json"}, &stdout, &stderr)
+	if code != ExitUsage {
+		t.Fatalf("code=%d want=%d", code, ExitUsage)
+	}
+	if !strings.Contains(stdout.String(), "DD_CONFIG_INVALID") {
+		t.Fatalf("stdout=%q", stdout.String())
+	}
+}
+
+func TestDoctorJSON(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"doctor", "--json"}, &stdout, &stderr); code != ExitOK {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "\"network_default\":\"none\"") {
+		t.Fatalf("stdout=%q", stdout.String())
 	}
 }
 

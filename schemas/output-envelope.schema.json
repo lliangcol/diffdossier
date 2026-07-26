@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/output-envelope.schema.json",
+  "title": "DiffDossier output envelope",
+  "type": "object",
+  "required": ["schema_version", "status"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "status": {"enum": ["ok", "error"]},
+    "data": {},
+    "error": {"$ref": "problem.schema.json"}
+  },
+  "additionalProperties": false
+}

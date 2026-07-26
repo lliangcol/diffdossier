@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/redaction-manifest.schema.json",
+  "type": "object",
+  "required": ["schema_version", "source_digest", "derived_digest", "transformations", "scan_digest"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "source_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "derived_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "transformations": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "scan_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}

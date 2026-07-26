@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/review-result.schema.json",
+  "type": "object",
+  "required": ["schema_version", "task_id", "snapshot_id", "task_input_hash", "reviewer", "coverage", "findings", "needs_confirmation", "residual_risks", "status"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "task_id": {"type": "string", "minLength": 1},
+    "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
+    "task_input_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "reviewer": {"type": "object"},
+    "coverage": {"type": "array"},
+    "findings": {"type": "array"},
+    "needs_confirmation": {"type": "array"},
+    "residual_risks": {"type": "array"},
+    "status": {"enum": ["incomplete", "completed"]}
+  },
+  "additionalProperties": false
+}
