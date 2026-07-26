@@ -25,3 +25,10 @@ Versioning once releases begin.
 - Added deterministic JSON/Markdown verdicts, verify/finalize, private portable
   exports, and public-derivative prepare/scan with approval-bound lifecycle
   primitives. Public approve/create/revoke remain gated and are not exposed.
+- Added deterministic secret scanning and Gate-log redaction, bounded Git/blob
+  capture, run/journal integrity checks, crash-stale lock recovery, lock-owner
+  tokens, Unix grandchild cancellation coverage, and Windows Job Object process
+  containment (cross-compiled; native verification pending).
+- Added exact dual approval binding for redacted public summaries, privacy
+  canaries, prompt-injection isolation, platform capability diagnostics, and
+  fixed-fixture performance benchmarks.

@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const MaxGitOutputBytes = 64 * 1024 * 1024
+
 type Repo struct {
 	Root string
 }
@@ -91,18 +93,46 @@ func runAt(ctx context.Context, dir string, args ...string) ([]byte, error) {
 	command := exec.CommandContext(ctx, "git", args...)
 	command.Dir = dir
 	command.Env = []string{"PATH=" + lookupPath(), "LC_ALL=C", "LANG=C"}
-	var stderr bytes.Buffer
-	command.Stderr = &stderr
-	output, err := command.Output()
+	stdout := &boundedBuffer{limit: MaxGitOutputBytes}
+	stderr := &boundedBuffer{limit: 1024 * 1024}
+	command.Stdout = stdout
+	command.Stderr = stderr
+	err := command.Run()
 	if err != nil {
-		message := strings.TrimSpace(stderr.String())
+		message := strings.TrimSpace(string(stderr.Bytes()))
 		if message != "" {
 			return nil, fmt.Errorf("%s: %w", message, err)
 		}
 		return nil, err
 	}
-	return output, nil
+	if stdout.exceeded {
+		return nil, fmt.Errorf("Git output exceeded %d-byte safety budget", MaxGitOutputBytes)
+	}
+	return stdout.Bytes(), nil
 }
+
+type boundedBuffer struct {
+	buffer   bytes.Buffer
+	limit    int
+	exceeded bool
+}
+
+func (writer *boundedBuffer) Write(value []byte) (int, error) {
+	original := len(value)
+	remaining := writer.limit - writer.buffer.Len()
+	if remaining > 0 {
+		take := len(value)
+		if take > remaining {
+			take = remaining
+		}
+		_, _ = writer.buffer.Write(value[:take])
+	}
+	if original > remaining {
+		writer.exceeded = true
+	}
+	return original, nil
+}
+func (writer *boundedBuffer) Bytes() []byte { return writer.buffer.Bytes() }
 
 func lookupPath() string {
 	path, err := exec.LookPath("git")

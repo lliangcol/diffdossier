@@ -45,3 +45,10 @@ func TestPrivateTempDir(t *testing.T) {
 		t.Fatalf("temporary path is not randomized: %s", path)
 	}
 }
+
+func TestCapabilitiesExposeUnverifiedWindowsBoundaries(t *testing.T) {
+	capabilities := ResolveCapabilities("windows", "arm64")
+	if capabilities.ProcessTree != "job_object_implemented_native_test_pending" || capabilities.PrivateStatePermissions != "windows_acl_native_test_pending" {
+		t.Fatalf("capabilities=%+v", capabilities)
+	}
+}

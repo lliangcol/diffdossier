@@ -13,12 +13,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/lliangcol/diffdossier/internal/policy"
+	"github.com/lliangcol/diffdossier/internal/redact"
 	publicschema "github.com/lliangcol/diffdossier/pkg/schema"
 )
 
@@ -100,15 +100,6 @@ type PublicPreparation struct {
 	PreparedContent []byte                 `json:"-"`
 }
 
-var secretPatterns = []struct {
-	name       string
-	expression *regexp.Regexp
-}{
-	{"private-key", regexp.MustCompile(`-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----`)},
-	{"aws-access-key", regexp.MustCompile(`AKIA[0-9A-Z]{16}`)},
-	{"generic-secret", regexp.MustCompile(`(?i)(?:api[_-]?key|secret|token|password)\s*[:=]\s*[^\s,;]{8,}`)},
-}
-
 func PreparePublic(content []byte, dataClass publicschema.DataClass, action, policyDigest, publicRevision, redactionApprovalDigest string) (PublicPreparation, error) {
 	if action != "create" && action != "replace" {
 		return PublicPreparation{}, errors.New("public action must be create or replace")
@@ -126,11 +117,16 @@ func PreparePublic(content []byte, dataClass publicschema.DataClass, action, pol
 	if artifactClass != policy.ArtifactPublicSynthetic && artifactClass != policy.ArtifactPublicProject && artifactClass != policy.ArtifactRedactedSummary {
 		return PublicPreparation{}, errors.New("unsupported public artifact class")
 	}
-	findings := []ScanFinding{}
-	for _, rule := range secretPatterns {
-		for _, location := range rule.expression.FindAllIndex(content, -1) {
-			findings = append(findings, ScanFinding{Rule: rule.name, Offset: location[0]})
-		}
+	if artifactClass == policy.ArtifactPublicProject && strings.TrimSpace(publicRevision) == "" {
+		return PublicPreparation{}, errors.New("public_project requires confirmed public revision")
+	}
+	secretFindings, scanErr := redact.Scan(content)
+	if scanErr != nil {
+		return PublicPreparation{}, scanErr
+	}
+	findings := make([]ScanFinding, 0, len(secretFindings))
+	for _, finding := range secretFindings {
+		findings = append(findings, ScanFinding{Rule: finding.Rule, Offset: finding.Offset})
 	}
 	sort.Slice(findings, func(i, j int) bool {
 		if findings[i].Offset != findings[j].Offset {
@@ -153,12 +149,20 @@ type PublicBundle struct {
 	ApprovalRecordDigest string               `json:"public_export_approval_record_digest"`
 }
 
-func CreatePublic(preparation PublicPreparation, approval policy.PublicApproval) (PublicBundle, error) {
+func CreatePublic(preparation PublicPreparation, approval policy.PublicApproval, redactionApproval *policy.RedactionApproval) (PublicBundle, error) {
 	if len(preparation.ScanFindings) > 0 {
 		return PublicBundle{}, errors.New("public candidate scan has findings")
 	}
 	if err := approval.Authorizes(preparation.Candidate); err != nil {
 		return PublicBundle{}, err
+	}
+	if preparation.Candidate.ArtifactClass == policy.ArtifactRedactedSummary {
+		if redactionApproval == nil {
+			return PublicBundle{}, errors.New("redacted summary requires private redaction approval")
+		}
+		if err := redactionApproval.Authorizes(preparation.Candidate); err != nil {
+			return PublicBundle{}, err
+		}
 	}
 	approvalBytes, _ := json.Marshal(approval)
 	return PublicBundle{SchemaVersion: "1.0", Content: append([]byte(nil), preparation.PreparedContent...), ContentDigest: preparation.Candidate.Digest, ArtifactClass: preparation.Candidate.ArtifactClass, PolicyDigest: preparation.Candidate.PolicyDigest, ScanDigest: preparation.Candidate.ScanDigest, ApprovalRecordDigest: sha(approvalBytes)}, nil

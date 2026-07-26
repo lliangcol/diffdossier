@@ -19,6 +19,7 @@ import (
 	"github.com/lliangcol/diffdossier/internal/platform"
 	"github.com/lliangcol/diffdossier/internal/policy"
 	"github.com/lliangcol/diffdossier/internal/process"
+	"github.com/lliangcol/diffdossier/internal/redact"
 	"github.com/lliangcol/diffdossier/internal/snapshot"
 	"github.com/lliangcol/diffdossier/internal/store"
 	publicschema "github.com/lliangcol/diffdossier/pkg/schema"
@@ -131,6 +132,7 @@ type processGateExecutor struct {
 
 func (executor processGateExecutor) Execute(ctx context.Context, gate gates.ExpandedGate) error {
 	env := []string{}
+	knownValues := []string{}
 	for _, binding := range gate.Environment {
 		value, present := os.LookupEnv(binding.Name)
 		sum := sha256.Sum256([]byte(value))
@@ -139,11 +141,24 @@ func (executor processGateExecutor) Execute(ctx context.Context, gate gates.Expa
 		}
 		if present {
 			env = append(env, binding.Name+"="+value)
+			knownValues = append(knownValues, value)
 		}
 	}
 	output, err := process.Run(ctx, process.Spec{Executable: gate.Executable, Args: gate.Argv[1:], Dir: gate.Cwd, Env: env, MaxStdout: 4 * 1024 * 1024, MaxStderr: 4 * 1024 * 1024})
-	_ = executor.stateStore.WriteRunBytes(executor.runDir, filepath.Join("logs", gate.ID+".stdout"), output.Stdout)
-	_ = executor.stateStore.WriteRunBytes(executor.runDir, filepath.Join("logs", gate.ID+".stderr"), output.Stderr)
+	stdoutRedacted, stdoutManifest, stdoutErr := redact.RedactKnown(output.Stdout, knownValues)
+	stderrRedacted, stderrManifest, stderrErr := redact.RedactKnown(output.Stderr, knownValues)
+	if stdoutErr != nil || stderrErr != nil {
+		return errors.Join(err, stdoutErr, stderrErr)
+	}
+	if writeErr := executor.stateStore.WriteRunBytes(executor.runDir, filepath.Join("logs", gate.ID+".stdout"), stdoutRedacted); writeErr != nil {
+		return errors.Join(err, writeErr)
+	}
+	if writeErr := executor.stateStore.WriteRunBytes(executor.runDir, filepath.Join("logs", gate.ID+".stderr"), stderrRedacted); writeErr != nil {
+		return errors.Join(err, writeErr)
+	}
+	if writeErr := executor.stateStore.WriteRunJSON(executor.runDir, filepath.Join("logs", gate.ID+".redaction.json"), map[string]any{"stdout": stdoutManifest, "stderr": stderrManifest}); writeErr != nil {
+		return errors.Join(err, writeErr)
+	}
 	return err
 }
 

@@ -49,8 +49,15 @@ type Event struct {
 }
 
 type Lock struct {
-	path string
-	file *os.File
+	path  string
+	file  *os.File
+	token string
+}
+
+type lockMetadata struct {
+	PID       int       `json:"pid"`
+	Token     string    `json:"token"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func Open(root string) (*Store, error) {
@@ -164,6 +171,12 @@ func (store *Store) LoadRun(repositoryID, runID string) (Run, snapshot.Seal, err
 	}
 	if err := VerifyEventChain(runDir); err != nil {
 		return Run{}, snapshot.Seal{}, err
+	}
+	if err := VerifyRunJournal(runDir, run); err != nil {
+		return Run{}, snapshot.Seal{}, err
+	}
+	if run.SnapshotID != seal.SnapshotID {
+		return Run{}, snapshot.Seal{}, errors.New("run and snapshot identifiers do not match")
 	}
 	return run, seal, nil
 }
@@ -338,7 +351,9 @@ func VerifyEventChain(runDir string) error {
 	scanner := bufio.NewScanner(file)
 	var previous string
 	var sequence uint64
+	count := 0
 	for scanner.Scan() {
+		count++
 		var event Event
 		if err := json.Unmarshal(scanner.Bytes(), &event); err != nil {
 			return fmt.Errorf("decode event %d: %w", sequence+1, err)
@@ -356,7 +371,119 @@ func VerifyEventChain(runDir string) error {
 		sequence = event.Sequence
 		previous = event.EventHash
 	}
-	return scanner.Err()
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	if count == 0 {
+		return errors.New("event chain is empty")
+	}
+	return nil
+}
+
+func VerifyRunJournal(runDir string, run Run) error {
+	derived, err := runJournalState(runDir, run.SnapshotID)
+	if err != nil {
+		return err
+	}
+	if derived != run.State {
+		return fmt.Errorf("run state %s does not match event journal state %s", run.State, derived)
+	}
+	return nil
+}
+
+func runJournalState(runDir, snapshotID string) (string, error) {
+	file, err := os.Open(filepath.Join(runDir, "events.jsonl"))
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	derived := ""
+	first := true
+	for scanner.Scan() {
+		var event Event
+		if err := json.Unmarshal(scanner.Bytes(), &event); err != nil {
+			return "", err
+		}
+		if first {
+			if event.Type != "run_prepared" {
+				return "", errors.New("event journal must begin with run_prepared")
+			}
+			var payload map[string]string
+			if err := json.Unmarshal(event.Payload, &payload); err != nil || payload["snapshot_id"] != snapshotID {
+				return "", errors.New("run_prepared does not bind the run snapshot")
+			}
+			derived = "PREPARED"
+			first = false
+			continue
+		}
+		if event.Type != "state_transition" {
+			continue
+		}
+		var transition map[string]string
+		if err := json.Unmarshal(event.Payload, &transition); err != nil {
+			return "", errors.New("invalid state transition payload")
+		}
+		if transition["from"] != derived || !allowedTransition(derived, transition["to"]) {
+			return "", errors.New("event journal contains invalid state transition")
+		}
+		derived = transition["to"]
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+	if derived == "" {
+		return "", errors.New("event journal has no run state")
+	}
+	return derived, nil
+}
+
+// RecoverRun repairs only a persisted run.json lagging its already-valid
+// write-ahead journal. The caller must echo the exact derived state.
+func (store *Store) RecoverRun(repositoryID, runID, expectedJournalState string) (Run, error) {
+	runDir, err := store.RunDir(repositoryID, runID)
+	if err != nil {
+		return Run{}, err
+	}
+	lock, err := AcquireRunLock(runDir)
+	if err != nil {
+		return Run{}, err
+	}
+	defer lock.Release()
+	var run Run
+	if err := readJSON(filepath.Join(runDir, "run.json"), &run); err != nil {
+		return Run{}, err
+	}
+	var seal snapshot.Seal
+	if err := readJSON(filepath.Join(runDir, "snapshot.json"), &seal); err != nil {
+		return Run{}, err
+	}
+	if run.SnapshotID != seal.SnapshotID {
+		return Run{}, errors.New("run and snapshot identifiers do not match")
+	}
+	if err := VerifyEventChain(runDir); err != nil {
+		return Run{}, err
+	}
+	derived, err := runJournalState(runDir, run.SnapshotID)
+	if err != nil {
+		return Run{}, err
+	}
+	if derived == run.State {
+		return run, nil
+	}
+	if expectedJournalState == "" || expectedJournalState != derived {
+		return Run{}, fmt.Errorf("recovery requires exact journal state %s", derived)
+	}
+	previous := run.State
+	run.State = derived
+	run.UpdatedAt = time.Now().UTC()
+	if err := atomicJSON(filepath.Join(runDir, "run.json"), run); err != nil {
+		return Run{}, err
+	}
+	if _, err := store.AppendEvent(runDir, "run_recovered", map[string]string{"persisted_state": previous, "journal_state": derived}); err != nil {
+		return Run{}, err
+	}
+	return run, nil
 }
 
 func AcquireRunLock(runDir string) (*Lock, error) {
@@ -368,7 +495,18 @@ func (lock *Lock) Release() error {
 		return nil
 	}
 	closeErr := lock.file.Close()
-	removeErr := os.Remove(lock.path)
+	removeErr := error(nil)
+	content, readErr := os.ReadFile(lock.path)
+	if readErr == nil {
+		var metadata lockMetadata
+		if json.Unmarshal(content, &metadata) != nil || metadata.Token != lock.token {
+			removeErr = errors.New("lock ownership changed; refusing to remove another lock")
+		} else {
+			removeErr = os.Remove(lock.path)
+		}
+	} else if !os.IsNotExist(readErr) {
+		removeErr = readErr
+	}
 	lock.file = nil
 	if closeErr != nil {
 		return closeErr
@@ -380,14 +518,49 @@ func acquire(path string) (*Lock, error) {
 	if err := platform.EnsurePrivateDir(filepath.Dir(path)); err != nil {
 		return nil, err
 	}
+	token, err := randomID("lock-", 16)
+	if err != nil {
+		return nil, err
+	}
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		if os.IsExist(err) {
-			return nil, fmt.Errorf("lock already held: %s", path)
+			content, readErr := os.ReadFile(path)
+			if readErr != nil {
+				return nil, fmt.Errorf("lock already held: %s", path)
+			}
+			var metadata lockMetadata
+			if json.Unmarshal(content, &metadata) != nil || metadata.PID < 1 || metadata.Token == "" {
+				return nil, fmt.Errorf("lock already held with invalid metadata: %s", path)
+			}
+			if processAlive(metadata.PID) {
+				return nil, fmt.Errorf("lock already held by pid %d: %s", metadata.PID, path)
+			}
+			if removeErr := os.Remove(path); removeErr != nil && !os.IsNotExist(removeErr) {
+				return nil, fmt.Errorf("remove stale lock: %w", removeErr)
+			}
+			return acquire(path)
 		}
 		return nil, err
 	}
-	return &Lock{path: path, file: file}, nil
+	metadata := lockMetadata{PID: os.Getpid(), Token: token, CreatedAt: time.Now().UTC()}
+	encoded, encodeErr := json.Marshal(metadata)
+	if encodeErr != nil {
+		file.Close()
+		os.Remove(path)
+		return nil, encodeErr
+	}
+	if _, writeErr := file.Write(encoded); writeErr != nil {
+		file.Close()
+		os.Remove(path)
+		return nil, writeErr
+	}
+	if syncErr := file.Sync(); syncErr != nil {
+		file.Close()
+		os.Remove(path)
+		return nil, syncErr
+	}
+	return &Lock{path: path, file: file, token: token}, nil
 }
 
 func atomicJSON(path string, value any) error {

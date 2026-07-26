@@ -51,6 +51,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return runFix(args[1:], stdout, stderr)
 	case "refresh":
 		return runRefresh(args[1:], stdout, stderr)
+	case "recover":
+		return runRecover(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n\n", args[0])
 		printUsage(stderr)
@@ -119,13 +121,14 @@ func runDoctor(args []string, stdout, stderr io.Writer) int {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_PLATFORM_PATHS", err.Error()), ExitInternal)
 	}
 	result := map[string]any{
-		"config_path":       paths.ConfigFile,
-		"state_dir":         paths.StateDir,
-		"cache_dir":         paths.CacheDir,
-		"network_default":   "none",
-		"default_provider":  "manual",
-		"telemetry":         false,
-		"strong_os_sandbox": false,
+		"config_path":           paths.ConfigFile,
+		"state_dir":             paths.StateDir,
+		"cache_dir":             paths.CacheDir,
+		"network_default":       "none",
+		"default_provider":      "manual",
+		"telemetry":             false,
+		"strong_os_sandbox":     false,
+		"platform_capabilities": platform.CurrentCapabilities(),
 	}
 	if *jsonOutput {
 		return writeJSON(stdout, stderr, publicschema.Success(result))
@@ -217,6 +220,7 @@ func printUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  diffdossier finding confirm|reject|accept-risk --finding-id ID --operator NAME [options]")
 	fmt.Fprintln(writer, "  diffdossier fix authorize --finding-ids ID[,ID] --scope-digest DIGEST --operator NAME --expires-at RFC3339 [options]")
 	fmt.Fprintln(writer, "  diffdossier refresh [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier recover --trust-journal-state STATE [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier config validate [--repo PATH] [--config PATH] [--json]")
 	fmt.Fprintln(writer, "  diffdossier help")
 }

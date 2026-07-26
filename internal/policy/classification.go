@@ -2,6 +2,9 @@
 package policy
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -104,13 +107,30 @@ const (
 )
 
 type PublicApproval struct {
-	Binding schema.ApprovalBinding `json:"binding"`
-	Revoked bool                   `json:"revoked"`
+	Binding    schema.ApprovalBinding `json:"binding"`
+	ApprovedBy string                 `json:"approved_by"`
+	Digest     string                 `json:"digest"`
+	Revoked    bool                   `json:"revoked"`
+}
+
+func NewPublicApproval(candidate PublicCandidate, approvedBy string, now time.Time) (PublicApproval, error) {
+	if approvedBy == "" {
+		return PublicApproval{}, errors.New("public approval requires approver")
+	}
+	approval := PublicApproval{Binding: schema.ApprovalBinding{SchemaVersion: "1.0", CandidateDigest: candidate.Digest, DataClass: schema.DataClass(candidate.ArtifactClass), Action: candidate.Action, PolicyDigest: candidate.PolicyDigest, ScanDigest: candidate.ScanDigest, RedactionApprovalDigest: candidate.RedactionApprovalDigest, ApprovedAt: now.UTC().Format(time.RFC3339Nano)}, ApprovedBy: approvedBy}
+	approval.Digest = digestApproval(approval)
+	return approval, nil
 }
 
 func (approval PublicApproval) Authorizes(candidate PublicCandidate) error {
 	if approval.Revoked {
 		return errors.New("public export approval is revoked")
+	}
+	if approval.Binding.SchemaVersion != "1.0" || approval.ApprovedBy == "" || approval.Digest == "" || approval.Digest != digestApproval(PublicApproval{Binding: approval.Binding, ApprovedBy: approval.ApprovedBy}) {
+		return errors.New("public export approval integrity is invalid")
+	}
+	if _, err := time.Parse(time.RFC3339Nano, approval.Binding.ApprovedAt); err != nil {
+		return errors.New("public export approval time is invalid")
 	}
 	if candidate.ArtifactClass != ArtifactPublicSynthetic &&
 		candidate.ArtifactClass != ArtifactPublicProject &&
@@ -127,8 +147,50 @@ func (approval PublicApproval) Authorizes(candidate PublicCandidate) error {
 		string(approval.Binding.DataClass) != string(candidate.ArtifactClass) ||
 		approval.Binding.Action != candidate.Action ||
 		approval.Binding.PolicyDigest != candidate.PolicyDigest ||
-		approval.Binding.ScanDigest != candidate.ScanDigest {
+		approval.Binding.ScanDigest != candidate.ScanDigest || approval.Binding.RedactionApprovalDigest != candidate.RedactionApprovalDigest {
 		return errors.New("public export approval does not exactly match candidate")
 	}
 	return nil
+}
+
+type RedactionApproval struct {
+	SchemaVersion           string    `json:"schema_version"`
+	SourceRunDigest         string    `json:"source_run_digest"`
+	DerivedContentDigest    string    `json:"derived_content_digest"`
+	RedactionManifestDigest string    `json:"redaction_manifest_digest"`
+	ScanDigest              string    `json:"scan_digest"`
+	ApprovedBy              string    `json:"approved_by"`
+	ApprovedAt              time.Time `json:"approved_at"`
+	Digest                  string    `json:"digest"`
+}
+
+func NewRedactionApproval(sourceRunDigest, derivedContentDigest, manifestDigest, scanDigest, approvedBy string, now time.Time) (RedactionApproval, error) {
+	if sourceRunDigest == "" || derivedContentDigest == "" || manifestDigest == "" || scanDigest == "" || approvedBy == "" {
+		return RedactionApproval{}, errors.New("redaction approval requires exact digests and approver")
+	}
+	approval := RedactionApproval{SchemaVersion: "1.0", SourceRunDigest: sourceRunDigest, DerivedContentDigest: derivedContentDigest, RedactionManifestDigest: manifestDigest, ScanDigest: scanDigest, ApprovedBy: approvedBy, ApprovedAt: now.UTC()}
+	approval.Digest = digestRedaction(approval)
+	return approval, nil
+}
+func (approval RedactionApproval) Authorizes(candidate PublicCandidate) error {
+	claimed := approval.Digest
+	approval.Digest = ""
+	if approval.SchemaVersion != "1.0" || approval.ApprovedBy == "" || approval.ApprovedAt.IsZero() || claimed != digestRedaction(approval) || approval.DerivedContentDigest != candidate.Digest || approval.ScanDigest != candidate.ScanDigest || claimed != candidate.RedactionApprovalDigest {
+		return errors.New("redaction approval does not exactly match candidate")
+	}
+	return nil
+}
+
+func digestApproval(approval PublicApproval) string {
+	approval.Digest = ""
+	approval.Revoked = false
+	encoded, _ := json.Marshal(approval)
+	sum := sha256.Sum256(encoded)
+	return "sha256:" + hex.EncodeToString(sum[:])
+}
+func digestRedaction(approval RedactionApproval) string {
+	approval.Digest = ""
+	encoded, _ := json.Marshal(approval)
+	sum := sha256.Sum256(encoded)
+	return "sha256:" + hex.EncodeToString(sum[:])
 }

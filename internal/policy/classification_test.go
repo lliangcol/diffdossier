@@ -62,10 +62,10 @@ func TestPublicApprovalIsContentBound(t *testing.T) {
 		Digest: "sha256:a", ArtifactClass: ArtifactPublicProject, Action: "create",
 		PolicyDigest: "sha256:p", ScanDigest: "sha256:s", PublicRevision: "abc123",
 	}
-	approval := PublicApproval{Binding: schema.ApprovalBinding{
-		CandidateDigest: candidate.Digest, DataClass: schema.DataClass(candidate.ArtifactClass), Action: candidate.Action,
-		PolicyDigest: candidate.PolicyDigest, ScanDigest: candidate.ScanDigest,
-	}}
+	approval, err := NewPublicApproval(candidate, "owner", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := approval.Authorizes(candidate); err != nil {
 		t.Fatal(err)
 	}
@@ -85,15 +85,27 @@ func TestRedactedSummaryRequiresSeparateApproval(t *testing.T) {
 		Digest: "sha256:a", ArtifactClass: ArtifactRedactedSummary, Action: "create",
 		PolicyDigest: "sha256:p", ScanDigest: "sha256:s",
 	}
-	approval := PublicApproval{Binding: schema.ApprovalBinding{
-		CandidateDigest: candidate.Digest, DataClass: schema.DataClass(candidate.ArtifactClass),
-		Action: candidate.Action, PolicyDigest: candidate.PolicyDigest, ScanDigest: candidate.ScanDigest,
-	}}
+	// Public approval alone cannot replace the independently bound redaction approval.
+	approval, err := NewPublicApproval(candidate, "owner", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := approval.Authorizes(candidate); err == nil {
 		t.Fatal("redacted summary without redaction approval must fail")
 	}
-	candidate.RedactionApprovalDigest = "sha256:redaction"
+	redaction, err := NewRedactionApproval("sha256:source", candidate.Digest, "sha256:manifest", candidate.ScanDigest, "security", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidate.RedactionApprovalDigest = redaction.Digest
+	approval, err = NewPublicApproval(candidate, "owner", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := approval.Authorizes(candidate); err != nil {
+		t.Fatal(err)
+	}
+	if err := redaction.Authorizes(candidate); err != nil {
 		t.Fatal(err)
 	}
 }

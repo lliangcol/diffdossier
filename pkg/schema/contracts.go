@@ -31,11 +31,12 @@ func (h ProviderHandshake) Valid() bool {
 }
 
 type ApprovalBinding struct {
-	SchemaVersion   string    `json:"schema_version"`
-	CandidateDigest string    `json:"candidate_digest"`
-	DataClass       DataClass `json:"data_class"`
-	Action          string    `json:"action"`
-	PolicyDigest    string    `json:"policy_digest"`
-	ScanDigest      string    `json:"scan_digest"`
-	ApprovedAt      string    `json:"approved_at"`
+	SchemaVersion           string    `json:"schema_version"`
+	CandidateDigest         string    `json:"candidate_digest"`
+	DataClass               DataClass `json:"data_class"`
+	Action                  string    `json:"action"`
+	PolicyDigest            string    `json:"policy_digest"`
+	ScanDigest              string    `json:"scan_digest"`
+	RedactionApprovalDigest string    `json:"redaction_approval_digest,omitempty"`
+	ApprovedAt              string    `json:"approved_at"`
 }

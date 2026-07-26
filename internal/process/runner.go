@@ -34,7 +34,10 @@ func Run(ctx context.Context, spec Spec) (Output, error) {
 	command.Dir = spec.Dir
 	command.Env = append([]string(nil), spec.Env...)
 	command.Stdin = bytes.NewReader(spec.Stdin)
-	configureTree(command)
+	if err := configureTree(command); err != nil {
+		return Output{}, err
+	}
+	defer finalizeTree(command)
 	stdout, err := command.StdoutPipe()
 	if err != nil {
 		return Output{}, err
@@ -44,6 +47,11 @@ func Run(ctx context.Context, spec Spec) (Output, error) {
 		return Output{}, err
 	}
 	if err := command.Start(); err != nil {
+		return Output{}, err
+	}
+	if err := afterStart(command); err != nil {
+		terminateTree(command)
+		_ = command.Wait()
 		return Output{}, err
 	}
 	done := make(chan struct{})
@@ -82,13 +90,13 @@ func Run(ctx context.Context, spec Spec) (Output, error) {
 	case waitErr = <-processDone:
 	}
 	wait.Wait()
+	if ctx.Err() != nil {
+		return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, ctx.Err()
+	}
 	if stdoutErr != nil || stderrErr != nil {
 		return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, errors.Join(stdoutErr, stderrErr)
 	}
 	if waitErr != nil {
-		if ctx.Err() != nil {
-			return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, ctx.Err()
-		}
 		return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, fmt.Errorf("process failed: %w", waitErr)
 	}
 	return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, nil

@@ -115,6 +115,21 @@ func TestCaptureExplicitIgnoredPath(t *testing.T) {
 	t.Fatal("explicit ignored path was not captured")
 }
 
+func TestCaptureFailsClosedOnBlobAndTotalBudgets(t *testing.T) {
+	dir := initFixture(t)
+	if err := os.WriteFile(filepath.Join(dir, "large.txt"), []byte("12345"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	repo, _ := gitrepo.Open(context.Background(), dir)
+	revisions, _ := repo.Resolve(context.Background(), "HEAD")
+	if _, err := Capture(context.Background(), repo, revisions, Options{IncludeUntracked: true, MaxBlobBytes: 4, MaxTotalBytes: 100}); err == nil {
+		t.Fatal("blob budget overflow accepted")
+	}
+	if _, err := Capture(context.Background(), repo, revisions, Options{IncludeUntracked: true, MaxBlobBytes: 100, MaxTotalBytes: 4}); err == nil {
+		t.Fatal("total budget overflow accepted")
+	}
+}
+
 func TestCaptureRenameDeleteBinaryAndSymlink(t *testing.T) {
 	dir := initFixture(t)
 	base := gitOutput(t, dir, "rev-parse", "HEAD")

@@ -31,7 +31,12 @@ const (
 type Options struct {
 	IncludeUntracked bool
 	IncludeIgnored   []string
+	MaxBlobBytes     int64
+	MaxTotalBytes    int64
 }
+
+const DefaultMaxBlobBytes int64 = 64 * 1024 * 1024
+const DefaultMaxTotalBytes int64 = 256 * 1024 * 1024
 
 type PathIdentity struct {
 	BytesBase64 string  `json:"path_bytes_base64"`
@@ -87,6 +92,12 @@ func Capture(ctx context.Context, repo *gitrepo.Repo, revisions gitrepo.Revision
 	if len(requested) > 0 {
 		options = requested[0]
 	}
+	if options.MaxBlobBytes < 1 {
+		options.MaxBlobBytes = DefaultMaxBlobBytes
+	}
+	if options.MaxTotalBytes < 1 {
+		options.MaxTotalBytes = DefaultMaxTotalBytes
+	}
 	entries := []Entry{}
 	committed, err := diffEntries(ctx, repo, ScopeCommitted, revisions.MergeBase, "HEAD")
 	if err != nil {
@@ -122,9 +133,17 @@ func Capture(ctx context.Context, repo *gitrepo.Repo, revisions gitrepo.Revision
 		return Result{}, err
 	}
 	entries = appendUnique(entries, submodules...)
+	var capturedBytes int64
 	for index := range entries {
 		if err := enrich(ctx, repo, revisions, &entries[index]); err != nil {
 			return Result{}, err
+		}
+		if entries[index].Size > options.MaxBlobBytes || entries[index].PreviousSize > options.MaxBlobBytes {
+			return Result{}, fmt.Errorf("changed blob exceeds %d-byte safety budget", options.MaxBlobBytes)
+		}
+		capturedBytes += entries[index].Size + entries[index].PreviousSize
+		if capturedBytes > options.MaxTotalBytes {
+			return Result{}, fmt.Errorf("changed content exceeds %d-byte total safety budget", options.MaxTotalBytes)
 		}
 	}
 	sort.Slice(entries, func(i, j int) bool {
@@ -434,6 +453,9 @@ func worktreeBlob(root string, path []byte) ([]byte, string, string, error) {
 	if !info.Mode().IsRegular() {
 		return nil, "", "", fmt.Errorf("unsupported worktree file type %s", info.Mode().Type())
 	}
+	if info.Size() > DefaultMaxBlobBytes {
+		return nil, "", "", fmt.Errorf("worktree blob exceeds %d-byte safety budget", DefaultMaxBlobBytes)
+	}
 	content, err := os.ReadFile(full)
 	mode := "100644"
 	if info.Mode().Perm()&0o111 != 0 {
@@ -451,7 +473,21 @@ func parseObjectMetadata(metadata []byte) (string, string) {
 	if len(parts) < 3 {
 		return "", ""
 	}
-	return string(parts[0]), string(parts[2])
+	for _, candidate := range parts[1:3] {
+		if (len(candidate) == 40 || len(candidate) == 64) && isHex(candidate) {
+			return string(parts[0]), string(candidate)
+		}
+	}
+	return "", ""
+}
+
+func isHex(value []byte) bool {
+	for _, character := range value {
+		if !((character >= '0' && character <= '9') || (character >= 'a' && character <= 'f') || (character >= 'A' && character <= 'F')) {
+			return false
+		}
+	}
+	return true
 }
 
 func parseLFSPointer(content []byte) (string, int64, bool) {

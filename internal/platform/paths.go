@@ -8,6 +8,39 @@ import (
 	"runtime"
 )
 
+type Capabilities struct {
+	OS                      string `json:"os"`
+	Architecture            string `json:"architecture"`
+	ProcessTree             string `json:"process_tree"`
+	PrivateStatePermissions string `json:"private_state_permissions"`
+	SymlinkSemantics        string `json:"symlink_semantics"`
+	ConsoleUTF8             string `json:"console_utf8"`
+	NativeEvidence          string `json:"native_evidence"`
+}
+
+func CurrentCapabilities() Capabilities { return ResolveCapabilities(runtime.GOOS, runtime.GOARCH) }
+func ResolveCapabilities(goos, goarch string) Capabilities {
+	result := Capabilities{OS: goos, Architecture: goarch, NativeEvidence: "current_process_only"}
+	switch goos {
+	case "windows":
+		result.ProcessTree = "job_object_implemented_native_test_pending"
+		result.PrivateStatePermissions = "windows_acl_native_test_pending"
+		result.SymlinkSemantics = "windows_policy_dependent"
+		result.ConsoleUTF8 = "native_test_pending"
+	case "darwin":
+		result.ProcessTree = "process_group"
+		result.PrivateStatePermissions = "posix_mode"
+		result.SymlinkSemantics = "native"
+		result.ConsoleUTF8 = "utf8"
+	default:
+		result.ProcessTree = "process_group"
+		result.PrivateStatePermissions = "posix_mode"
+		result.SymlinkSemantics = "native"
+		result.ConsoleUTF8 = "utf8"
+	}
+	return result
+}
+
 type Paths struct {
 	ConfigFile string `json:"config_path"`
 	StateDir   string `json:"state_dir"`

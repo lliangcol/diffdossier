@@ -3,7 +3,7 @@
 DiffDossier is a local-first, provider-neutral, evidence-driven orchestrator
 for reviewing and fixing large Git changes.
 
-The repository is in Phase 5 implementation. No public release, stable CLI, or platform support is claimed yet.
+The repository is in Phase 6 implementation. No public release, stable CLI, or Tier 1 platform support is claimed yet.
 
 ## Current boundaries
 
@@ -22,6 +22,13 @@ The repository is in Phase 5 implementation. No public release, stable CLI, or p
   separate shell-mode acknowledgement. No automatic fix, remote write/CI
   workflow, public bundle approval/creation/revocation, or networked Provider
   is enabled by default.
+- Security/reliability controls now include bounded Git/blob capture, log
+  redaction manifests, event-journal/run-state integrity checks, stale-lock
+  recovery, Unix process-group termination, and a Windows Job Object
+  implementation. Native Windows/Linux/macOS-arm64 verification is still
+  pending.
+- Interrupted write-ahead transitions can be resumed only with
+  `recover --trust-journal-state <exact-state>`; recovery does not guess.
 
 ## Local verification
 

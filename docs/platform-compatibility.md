@@ -1,6 +1,6 @@
 # Phase 0 platform compatibility spike
 
-Status: local spike complete; native platform matrix incomplete
+Status: macOS/amd64 development evidence expanded; native platform matrix incomplete
 
 This spike tests the minimum assumptions needed before DiffDossier declares an operating-system support tier. It does not establish Tier 1 support by itself.
 
@@ -10,15 +10,15 @@ This spike tests the minimum assumptions needed before DiffDossier declares an o
 - private state directory and file permissions where POSIX permission bits are available;
 - same-directory atomic replacement;
 - exclusive lock-file acquisition and reacquisition;
-- cancellation of a direct child process;
+- cancellation of a direct child and a real grandchild through a Unix process group;
 - `CGO_ENABLED=0` cross-builds for planned Tier 1 and Tier 2 OS/architecture pairs.
 
 ## Deliberately not claimed
 
-- Native Windows process-tree cancellation through Job Objects, ACL verification, console behavior, long paths, or case-insensitive collision behavior.
+- Native Windows Job Object runtime behavior, ACL verification, console behavior, long paths, or case-insensitive collision behavior. The Job Object implementation and amd64/arm64 test binaries cross-compile, but cross-compilation is not native evidence.
 - Native Linux XDG behavior or permissions.
 - Native macOS arm64 runtime behavior.
-- Symlink, submodule, LFS, invalid UTF-8 path, crash recovery, or concurrent multi-process semantics.
+- Native cross-platform symlink/ACL semantics and Unicode normalization/case behavior. Local inventory fixtures do cover symlink, submodule, LFS, and invalid UTF-8 paths.
 - Any minimum supported OS, Git, or Go version.
 
 Those claims require native fixtures and CI evidence in later phases. Cross-build success is compile evidence only.
@@ -46,6 +46,13 @@ Native macOS/amd64 execution passed:
 - `atomic-replace`;
 - `exclusive-lock`;
 - `direct-child-cancel`.
+- `grandchild-process-group-cancel`.
+
+Phase 6 also verifies locally that state locks carry PID plus random ownership
+tokens, dead-PID locks can be recovered, and a process cannot release a lock
+whose token has been replaced. `doctor --json` exposes the compiled platform
+mechanism and labels unverified Windows capabilities rather than silently
+downgrading.
 
 With `CGO_ENABLED=0`, the same source cross-built for:
 

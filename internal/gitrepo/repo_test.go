@@ -56,3 +56,14 @@ func run(t *testing.T, dir, name string, args ...string) {
 		t.Fatalf("%s %v: %v\n%s", name, args, err, output)
 	}
 }
+
+func TestBoundedBufferDoesNotGrowPastLimit(t *testing.T) {
+	writer := &boundedBuffer{limit: 4}
+	count, err := writer.Write([]byte("123456"))
+	if err != nil || count != 6 {
+		t.Fatalf("write=%d err=%v", count, err)
+	}
+	if string(writer.Bytes()) != "1234" || !writer.exceeded {
+		t.Fatalf("buffer=%q exceeded=%t", writer.Bytes(), writer.exceeded)
+	}
+}
