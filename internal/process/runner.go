@@ -77,24 +77,33 @@ func Run(ctx context.Context, spec Spec) (Output, error) {
 			limitError <- stderrErr
 		}
 	}()
-	processDone := make(chan error, 1)
-	go func() { processDone <- command.Wait() }()
-	var waitErr error
+	readersDone := make(chan struct{})
+	go func() {
+		wait.Wait()
+		close(readersDone)
+	}()
+	var outputErr error
 	select {
-	case outputErr := <-limitError:
+	case outputErr = <-limitError:
 		terminateTree(command)
-		waitErr = <-processDone
-		if outputErr != nil {
-			waitErr = errors.Join(waitErr, outputErr)
-		}
-	case waitErr = <-processDone:
+		<-readersDone
+	case <-ctx.Done():
+		terminateTree(command)
+		<-readersDone
+	case <-readersDone:
 	}
-	wait.Wait()
+	// StdoutPipe and StderrPipe require reads to finish before Wait closes the
+	// descriptors. Calling Wait concurrently with the readers is racy on fast
+	// child processes and can surface a spurious "file already closed" error.
+	waitErr := command.Wait()
 	if ctx.Err() != nil {
 		return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, ctx.Err()
 	}
 	if stdoutErr != nil || stderrErr != nil {
 		return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, errors.Join(stdoutErr, stderrErr)
+	}
+	if outputErr != nil {
+		return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, errors.Join(waitErr, outputErr)
 	}
 	if waitErr != nil {
 		return Output{Stdout: stdoutBytes, Stderr: stderrBytes}, fmt.Errorf("process failed: %w", waitErr)

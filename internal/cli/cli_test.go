@@ -221,8 +221,17 @@ func TestDoctorHonorsStateAndCacheEnvironment(t *testing.T) {
 	if code := Run([]string{"doctor", "--repo", repo, "--json"}, &stdout, &stderr); code != ExitOK {
 		t.Fatalf("code=%d stderr=%s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), state) || !strings.Contains(stdout.String(), cache) {
-		t.Fatalf("stdout=%s", stdout.String())
+	var envelope struct {
+		Data struct {
+			StateDir string `json:"state_dir"`
+			CacheDir string `json:"cache_dir"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil {
+		t.Fatalf("decode doctor output: %v; stdout=%s", err, stdout.String())
+	}
+	if envelope.Data.StateDir != state || envelope.Data.CacheDir != cache {
+		t.Fatalf("state_dir=%q cache_dir=%q want state=%q cache=%q", envelope.Data.StateDir, envelope.Data.CacheDir, state, cache)
 	}
 }
 
