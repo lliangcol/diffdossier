@@ -95,16 +95,17 @@ func runPacketContract(args []string, stdout, stderr io.Writer) int {
 	packet := contractPacket{
 		SchemaVersion: "1.0",
 		SnapshotID:    resolved.seal.SnapshotID,
-		DataClass:     publicschema.PrivateProject,
+		DataClass:     resolved.run.DataClass,
 		Prompt:        contractPacketPrompt,
 		PromptDigest:  packets.DigestPrompt(contractPacketPrompt),
 		Graph:         graph,
 	}
 	canonical, _ := json.Marshal(struct {
-		SnapshotID   string          `json:"snapshot_id"`
-		PromptDigest string          `json:"prompt_digest"`
-		Graph        contracts.Graph `json:"contract_graph"`
-	}{packet.SnapshotID, packet.PromptDigest, packet.Graph})
+		SnapshotID   string                 `json:"snapshot_id"`
+		DataClass    publicschema.DataClass `json:"data_class"`
+		PromptDigest string                 `json:"prompt_digest"`
+		Graph        contracts.Graph        `json:"contract_graph"`
+	}{packet.SnapshotID, packet.DataClass, packet.PromptDigest, packet.Graph})
 	digest := sha256.Sum256(canonical)
 	packet.InputDigest = "sha256:" + hex.EncodeToString(digest[:])
 	if err := resolved.stateStore.WriteRunJSON(resolved.runDir, "packets/contract.json", packet); err != nil {
@@ -176,7 +177,7 @@ func loadTaskPacket(resolved exportContext, taskID string) (packets.Packet, erro
 	if err := resolved.stateStore.ReadRunJSON(resolved.runDir, filepath.Join("tasks", taskID+".json"), &task); err != nil {
 		return packets.Packet{}, fmt.Errorf("read task: %w", err)
 	}
-	expected, err := packets.Build(task, publicschema.PrivateProject)
+	expected, err := packets.Build(task, resolved.run.DataClass)
 	if err != nil {
 		return packets.Packet{}, err
 	}

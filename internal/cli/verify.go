@@ -112,7 +112,7 @@ func runVerify(args []string, stdout, stderr io.Writer, finalize bool) int {
 	if err := stateStore.ReadRunJSON(runDir, "results/index.json", &index); err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_RESULT_INDEX", err.Error()), ExitEvidence)
 	}
-	if err := verifyResultIndex(stateStore, runDir, index, plan); err != nil {
+	if err := verifyResultIndex(stateStore, runDir, index, plan, run.DataClass); err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_RESULT_INDEX", err.Error()), ExitEvidence)
 	}
 	ledger := workflow.FindingLedger{SchemaVersion: "1.0", Findings: []workflow.FindingRecord{}}

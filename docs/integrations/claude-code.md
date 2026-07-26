@@ -1,9 +1,9 @@
 # Claude Code integration status
 
-- Evidence date: 2026-07-26
-- Status: manual packet/result flow only
-- Automatic adapter: not published; G-09 remains required
-- Live model smoke: not run; G-05 and exact G-10 authorization remain required
+- Evidence date: 2026-07-27
+- Status: manual flow plus API-key-only opt-in automatic adapter
+- Automatic adapter: implemented in `diffdossier-provider`; publication authorized for the beta release
+- Live model smoke: requires an exact command plan, trust binding, egress grant, and API-key authentication
 - Locally observed CLI: `2.1.220 (Claude Code)`
 
 ## Verified capability
@@ -18,19 +18,22 @@ These capabilities are technically sufficient for a future wrapper to accept a
 DiffDossier packet and return one normalized Result. They do not authorize an
 automatic launch or any egress.
 
-## Candidate boundary, not an enabled adapter
+## Enabled adapter boundary
 
-A future adapter must run from a repository-external private directory, disable
-all tools with `--tools ""`, disable session persistence and ambient
+The adapter runs from a repository-external private directory, disables
+all tools with `--tools ""`, disables session persistence and ambient
 customizations, request the exact Result Schema, cap turns and spend, and bind
 the executable, version, argv, environment-value digests, packet, model, and
 working directory. It must not use `--dangerously-skip-permissions`.
 DiffDossier's trust binding, egress grant, timeout, output bound, and Result
 validation still apply.
 
-The wrapper and invocation example remain unpublished until G-09 is approved
-for a specific Claude Code version. A live smoke additionally requires G-05 and
-the exact per-run G-10 execution plan.
+The adapter always supplies `--bare`, so Claude Code accepts only
+`ANTHROPIC_API_KEY` or a configured API-key helper and cannot silently reuse a
+consumer OAuth session. Its bound arguments include the resolved non-symlink
+CLI path, exact CLI and Schema digests, exact version output, model, pass ID,
+perspective, one-turn limit, and dollar budget. The generic command Provider
+still requires an exact private trust binding and egress grant before launch.
 
 ## Terms, authentication, and data controls
 

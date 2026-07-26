@@ -34,4 +34,11 @@ appended to `reviews/attempts.json`. Switching Provider therefore retains the
 prior reviewer/provider/pass history; timeout, quota, rate-limit, login, and
 other failures are not mistaken for completed review.
 
-Codex and Claude Code remain manual integrations until their current official capabilities, authorization method, non-interactive behavior, and applicable terms are recorded and a separately authorized live smoke is performed. No live model call is part of the default test suite.
+The separately released `diffdossier-provider` binary adapts Codex and Claude
+Code to this same protocol. It revalidates the vendor executable digest and
+exact version, requires the release-matching Result Schema, uses a
+repository-external working directory, and replaces model-supplied reviewer
+identity with trusted bound metadata before running the normal Result
+validator. Codex is non-interactive and read-only with ambient rules disabled;
+Claude Code is tool-free, one-turn, spend-capped, and `--bare` API-key-only.
+No live model call is part of the default test suite.

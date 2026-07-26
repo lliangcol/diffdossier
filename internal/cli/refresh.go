@@ -114,7 +114,7 @@ func runRefresh(args []string, stdout, stderr io.Writer) int {
 	if _, err := stateStore.UpdateRunState(oldRunDir, "MUTATED"); err != nil {
 		return ExitEvidence
 	}
-	newRun, newRunDir, err := stateStore.BeginRun(repository, newSeal)
+	newRun, newRunDir, err := stateStore.BeginClassifiedRun(repository, newSeal, run.DataClass)
 	if err != nil {
 		return ExitEvidence
 	}

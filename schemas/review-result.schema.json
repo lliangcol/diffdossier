@@ -28,7 +28,7 @@
         "type": "object",
         "required": ["scope", "path_bytes_base64", "status", "evidence"],
         "properties": {
-          "scope": {"enum": ["merge_base_to_head", "staged", "unstaged", "untracked", "explicit_ignored"]},
+          "scope": {"enum": ["merge_base_to_head", "staged", "unstaged", "untracked", "ignored_explicit"]},
           "path_bytes_base64": {"type": "string", "minLength": 1},
           "status": {"enum": ["fully_reviewed", "mechanically_verified", "invariant_checked", "sampled", "excluded_with_reason", "not_reviewed"]},
           "evidence": {"type": "string", "minLength": 1}

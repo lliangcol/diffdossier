@@ -142,7 +142,7 @@ func runRecord(args []string, stdout, stderr io.Writer) int {
 	if !sameCanonicalJSON(storedTask, task) {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_TASK_INTEGRITY", "stored task does not match deterministic reconstruction"), ExitEvidence)
 	}
-	packet, err := packets.Build(task, publicschema.PrivateProject)
+	packet, err := packets.Build(task, run.DataClass)
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_PACKET_BUILD", err.Error()), ExitEvidence)
 	}
@@ -196,7 +196,7 @@ func runRecord(args []string, stdout, stderr io.Writer) int {
 	if err := stateStore.ReadRunJSON(runDir, "results/index.json", &index); err != nil && !os.IsNotExist(err) {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_RESULT_INDEX", err.Error()), ExitEvidence)
 	}
-	if err := verifyResultIndex(stateStore, runDir, index, rebuiltPlan); err != nil {
+	if err := verifyResultIndex(stateStore, runDir, index, rebuiltPlan, run.DataClass); err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_RESULT_INDEX", err.Error()), ExitEvidence)
 	}
 	resultPath := results.ResultPath(task.ID, reviewResult.Reviewer.PassID)
@@ -293,7 +293,7 @@ func buildTaskComparison(stateStore *store.Store, runDir string, index results.I
 	return results.Compare(inputs...), true, nil
 }
 
-func verifyResultIndex(stateStore *store.Store, runDir string, index results.Index, plan planner.Plan) error {
+func verifyResultIndex(stateStore *store.Store, runDir string, index results.Index, plan planner.Plan, dataClass publicschema.DataClass) error {
 	if index.SchemaVersion != "1.0" || index.Records == nil {
 		return errors.New("result index must use schema 1.0 with a records array")
 	}
@@ -312,7 +312,7 @@ func verifyResultIndex(stateStore *store.Store, runDir string, index results.Ind
 		if !ok || record.ResultPath != results.ResultPath(record.TaskID, record.PassID) {
 			return errors.New("result index references an unknown task or non-canonical path")
 		}
-		packet, err := packets.Build(task, publicschema.PrivateProject)
+		packet, err := packets.Build(task, dataClass)
 		if err != nil {
 			return err
 		}

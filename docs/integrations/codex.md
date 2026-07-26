@@ -1,9 +1,9 @@
 # Codex integration status
 
-- Evidence date: 2026-07-26
-- Status: manual packet/result flow only
-- Automatic adapter: not published; G-09 remains required
-- Live model smoke: not run; G-05 and exact G-10 authorization remain required
+- Evidence date: 2026-07-27
+- Status: manual flow plus opt-in automatic adapter
+- Automatic adapter: implemented in `diffdossier-provider`; publication authorized for the beta release
+- Live model smoke: requires an exact command plan, trust binding, and egress grant for every packet
 - Locally observed CLI: `codex-cli 0.146.0-alpha.3.1`
 
 ## Verified capability
@@ -20,19 +20,23 @@ DiffDossier packet, run outside the target repository, request the
 `review-result` Schema, and return one normalized result. They do not by
 themselves authorize DiffDossier to launch Codex or send project data.
 
-## Candidate boundary, not an enabled adapter
+## Enabled adapter boundary
 
-A future adapter must use `codex exec --ephemeral --sandbox read-only`, isolate
-or explicitly suppress ambient configuration, bind the exact executable,
+The adapter uses `codex exec --ephemeral --sandbox read-only`, suppresses
+ambient user configuration and repository rules, and binds the exact executable,
 version, argv, environment-value digests, packet, output Schema, model, and
 working directory, and pass only credential variables approved for that
 invocation. It must not use a bypass-sandbox flag. DiffDossier must still apply
 its command trust binding, egress grant, timeout, output bound, and untrusted
 Result validation.
 
-The wrapper and any example invocation remain unpublished until the maintainer
-approves G-09 for a specific Codex version. A live smoke additionally requires
-G-05 and the exact per-run G-10 execution plan.
+The release archive contains `diffdossier-provider` and the exact
+`review-result.schema.json` embedded by that binary. Invoke the adapter only as
+an authorization-gated `command` Provider. Its arguments must include
+`--provider codex`, the resolved non-symlink CLI path, exact CLI and Schema
+SHA-256 digests, exact `--version` output, model, pass ID, and perspective.
+DiffDossier first emits the complete command plan without executing it; only a
+matching private trust binding and egress grant allow the call.
 
 ## Terms and data controls
 

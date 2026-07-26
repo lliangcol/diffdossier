@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/lliangcol/diffdossier/internal/packets"
 )
 
 func TestPrepareWritesStateOutsideRepository(t *testing.T) {
@@ -63,6 +65,56 @@ func TestPrepareUsesEnvironmentPathsAndEffectiveConfigChangesGoStale(t *testing.
 	stderr.Reset()
 	if code := Run([]string{"plan", "--repo", repo, "--json"}, &stdout, &stderr); code != ExitStale {
 		t.Fatalf("plan code=%d want=%d stdout=%s stderr=%s", code, ExitStale, stdout.String(), stderr.String())
+	}
+}
+
+func TestPrepareBindsPublicSyntheticClassificationIntoPackets(t *testing.T) {
+	repo := initializedRepo(t)
+	if err := os.WriteFile(filepath.Join(repo, "diffdossier.toml"), []byte("schema_version = 1\nbaseline = \"HEAD\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	state := filepath.Join(t.TempDir(), "state")
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"prepare", "--repo", repo, "--state-dir", state, "--data-class", "public_synthetic", "--json"}, &stdout, &stderr); code != ExitOK {
+		t.Fatalf("prepare code=%d stderr=%s stdout=%s", code, stderr.String(), stdout.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := Run([]string{"plan", "--repo", repo, "--state-dir", state, "--json"}, &stdout, &stderr); code != ExitOK {
+		t.Fatalf("plan code=%d stderr=%s stdout=%s", code, stderr.String(), stdout.String())
+	}
+	runPaths, err := filepath.Glob(filepath.Join(state, "repositories", "*", "runs", "*", "run.json"))
+	if err != nil || len(runPaths) != 1 {
+		t.Fatalf("run paths=%v err=%v", runPaths, err)
+	}
+	var run struct {
+		DataClass string `json:"data_class"`
+	}
+	readFixtureJSON(t, runPaths[0], &run)
+	if run.DataClass != "public_synthetic" {
+		t.Fatalf("run data_class=%q", run.DataClass)
+	}
+	packetPaths, err := filepath.Glob(filepath.Join(filepath.Dir(runPaths[0]), "packets", "task-*.json"))
+	if err != nil || len(packetPaths) == 0 {
+		t.Fatalf("packet paths=%v err=%v", packetPaths, err)
+	}
+	var packet packets.Packet
+	readFixtureJSON(t, packetPaths[0], &packet)
+	if packet.DataClass != "public_synthetic" {
+		t.Fatalf("packet data_class=%q", packet.DataClass)
+	}
+}
+
+func TestPreparePublicProjectRequiresExactRevision(t *testing.T) {
+	repo := initializedRepo(t)
+	if err := os.WriteFile(filepath.Join(repo, "diffdossier.toml"), []byte("schema_version = 1\nbaseline = \"HEAD\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	state := filepath.Join(t.TempDir(), "state")
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"prepare", "--repo", repo, "--state-dir", state, "--data-class", "public_project", "--json"}, &stdout, &stderr)
+	if code != ExitBlocked || !bytes.Contains(stdout.Bytes(), []byte("DD_PUBLIC_REVISION_REQUIRED")) {
+		t.Fatalf("code=%d stderr=%s stdout=%s", code, stderr.String(), stdout.String())
 	}
 }
 

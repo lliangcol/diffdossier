@@ -43,5 +43,9 @@ Versioning once releases begin.
   including DCO enforcement for new pull-request commits, four Tier 1 native
   runners, six-target cross-builds, checksums, SPDX attestation, and release
   publication after all required jobs pass.
+- Added immutable per-run data classification with exact public revision
+  confirmation, plus packaged Codex and API-key-only Claude Code adapters that
+  bind vendor binary/version, model, Result Schema, pass, perspective, command
+  trust, and egress authorization.
 - Recorded Liu Liang as copyright holder and the exact prospective DCO history
   exception through commit `98856de56e6543b4806d899c611a2744f76686c0`.

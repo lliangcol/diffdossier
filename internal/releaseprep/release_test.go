@@ -100,7 +100,7 @@ func writeValidReleaseFixture(t *testing.T, root string) Manifest {
 
 func TestDeterministicArchives(t *testing.T) {
 	stage := t.TempDir()
-	for _, name := range []string{"LICENSE", "NOTICE", "README.md", "diffdossier", "diffdossier.exe"} {
+	for _, name := range []string{"LICENSE", "NOTICE", "README.md", "review-result.schema.json", "diffdossier", "diffdossier-provider", "diffdossier.exe", "diffdossier-provider.exe"} {
 		if err := os.WriteFile(filepath.Join(stage, name), []byte(name+"\n"), 0o755); err != nil {
 			t.Fatal(err)
 		}

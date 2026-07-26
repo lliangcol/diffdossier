@@ -53,7 +53,9 @@ an untagged local rehearsal only; candidate artifacts must never be attached to
 a GitHub Release.
 
 The build disables workspace inheritance, automatic toolchain download,
-module-network access, and ambient Go flags. Reproduction requires the same
+module-network access, and ambient Go flags. Each archive contains the core
+`diffdossier` binary, the optional `diffdossier-provider` adapter, and the exact
+`review-result.schema.json` contract. Reproduction requires the same
 recorded builder reported by the same controlled `go env GOVERSION`
 environment; deterministic packaging is not a claim that different Go
 toolchains produce identical bytes.

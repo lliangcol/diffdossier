@@ -19,7 +19,9 @@ Get-FileHash .\diffdossier_<version>_windows_amd64.zip -Algorithm SHA256
 ```
 
 Extract the archive, place `diffdossier` (or `diffdossier.exe`) on a trusted
-PATH, and confirm the embedded identity:
+PATH, and confirm the embedded identity. Keep `diffdossier-provider` and
+`review-result.schema.json` together in a trusted location if automatic Codex
+or Claude Code integration is needed; neither is required for manual review.
 
 ```text
 diffdossier version --json
