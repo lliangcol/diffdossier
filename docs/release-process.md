@@ -9,10 +9,11 @@ still fails closed until each preceding check has produced its own evidence.
 
 As of 2026-07-27, the pinned Codex synthetic smoke has passed. The Claude Code
 boundary correctly failed with zero accepted results because no compliant API
-key or API-key helper was present. The `v0.1.0-beta.1` tag and public
-prerelease remain blocked until the successful Claude Code live smoke exists,
-or a separately reviewed release-scope decision removes that automatic adapter
-from the release. Consumer OAuth is not an allowed workaround.
+key or API-key helper was present. Maintainer `liuliang1` subsequently accepted
+the beta-only risk in
+`docs/governance/beta-claude-smoke-exception.md`, so that successful smoke is
+not a `v0.1.0-beta.1` publication blocker. The exception does not claim a pass,
+does not allow consumer OAuth, and expires before a stable release.
 
 ## Required approvals and evidence
 
