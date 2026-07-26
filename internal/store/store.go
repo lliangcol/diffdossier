@@ -224,6 +224,14 @@ func (store *Store) WriteRunJSON(runDir, relative string, value any) error {
 	return atomicJSON(target, value)
 }
 
+func (store *Store) WriteRunBytes(runDir, relative string, content []byte) error {
+	target, err := runArtifactPath(runDir, relative)
+	if err != nil {
+		return err
+	}
+	return atomicBytes(target, content)
+}
+
 func (store *Store) ReadRunJSON(runDir, relative string, target any) error {
 	path, err := runArtifactPath(runDir, relative)
 	if err != nil {

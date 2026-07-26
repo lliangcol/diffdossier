@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/report.schema.json",
+  "type": "object",
+  "required": ["schema_version", "verdict", "run_id", "snapshot_id", "baseline", "head", "worktree", "reviewability", "changed_path_coverage", "findings", "needs_confirmation", "gates", "reviewer_comparisons", "human_merge_notes", "residual_risks", "evidence_limitations", "generated_at"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "verdict": {"enum": ["ready", "not_ready", "needs_confirmation", "not_reviewable"]},
+    "run_id": {"type": "string"},
+    "snapshot_id": {"type": "string"},
+    "baseline": {"type": "string"},
+    "head": {"type": "string"},
+    "worktree": {"type": "string"},
+    "reviewability": {"type": "string"},
+    "changed_path_coverage": {"type": "object"},
+    "findings": {"type": "array"},
+    "needs_confirmation": {"type": "array"},
+    "gates": {"type": "array"},
+    "reviewer_comparisons": {"type": "array"},
+    "human_merge_notes": {"type": "array"},
+    "residual_risks": {"type": "array"},
+    "evidence_limitations": {"type": "array"},
+    "generated_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

@@ -17,3 +17,11 @@ Versioning once releases begin.
 - Added manual/mock Providers, an authorization-gated argv-only command
   protocol, strict Result import, immutable review-pass indexing,
   heterogeneous comparison, and the `record task` workflow.
+- Added operator-owned finding transitions, content-bound fix authorization,
+  mutation-scope refresh and must-reload propagation.
+- Added inspect-only Gate DAG planning, exact execution trust, shell-mode
+  acknowledgement, timeout/process-tree controls, cache constraints, and
+  unexpected-worktree-mutation detection.
+- Added deterministic JSON/Markdown verdicts, verify/finalize, private portable
+  exports, and public-derivative prepare/scan with approval-bound lifecycle
+  primitives. Public approve/create/revoke remain gated and are not exposed.

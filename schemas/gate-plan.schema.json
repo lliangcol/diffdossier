@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/gate-plan.schema.json",
+  "title": "DiffDossier expanded Gate plan",
+  "type": "object",
+  "required": ["schema_version", "repository_id", "snapshot_id", "config_digest", "binary_digest", "gates", "plan_digest", "trust_candidate"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "repository_id": {"type": "string", "minLength": 1},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "config_digest": {"type": "string", "minLength": 1},
+    "binary_digest": {"type": "string", "minLength": 1},
+    "gates": {"type": "array", "items": {"type": "object", "required": ["id", "requested_executable", "executable", "executable_digest", "executable_class", "argv", "cwd", "cwd_class", "environment", "when_paths", "depends_on", "timeout_seconds", "resource_class", "cache_class", "blocking", "final_always", "network_class", "expected_writes", "redaction_policy", "shell_mode", "definition_digest"], "properties": {
+      "id": {"type": "string", "minLength": 1}, "requested_executable": {"type": "string", "minLength": 1}, "executable": {"type": "string", "minLength": 1}, "executable_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "executable_class": {"enum": ["repository", "external"]}, "argv": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "cwd": {"type": "string", "minLength": 1}, "cwd_class": {"enum": ["repository", "external"]}, "environment": {"type": "array", "items": {"type": "object", "required": ["name", "value_digest", "present"], "properties": {"name": {"type": "string"}, "value_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}, "present": {"type": "boolean"}}, "additionalProperties": false}}, "when_paths": {"type": "array", "items": {"type": "string"}}, "depends_on": {"type": "array", "items": {"type": "string"}}, "timeout_seconds": {"type": "integer", "minimum": 1}, "resource_class": {"enum": ["cpu", "io", "exclusive", "network", "external"]}, "cache_class": {"enum": ["worktree_deterministic", "host_volatile", "time_network", "external"]}, "blocking": {"type": "boolean"}, "final_always": {"type": "boolean"}, "network_class": {"enum": ["none", "local", "external"]}, "expected_writes": {"type": "array", "items": {"type": "string"}}, "redaction_policy": {"type": "string"}, "shell_mode": {"type": "boolean"}, "definition_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+    }, "additionalProperties": false}},
+    "plan_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "trust_candidate": {"type": "object"}
+  },
+  "additionalProperties": false
+}

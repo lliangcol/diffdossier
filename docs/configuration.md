@@ -27,3 +27,15 @@ diffdossier.example.toml; unsupported TOML features fail closed.
 Optional risk policy files use the strict format shown in
 policies/risk.example.toml. Policy rules may raise inferred risk but can never
 lower it. Invalid, missing, escaping, or unknown policy input blocks planning.
+
+Each `[[gates]]` entry declares argv (never a generated shell string), cwd,
+environment allowlist, path selectors, dependencies, timeout, resource and
+network classes, cache class, blocking/final behavior, expected writes, and a
+redaction policy. `gates plan` resolves and hashes the executable and allowed
+environment values but never starts the command. The example configuration is
+the canonical TOML surface.
+
+Only `worktree_deterministic` evidence can be reused, and then only for the
+same snapshot, expanded definition, DiffDossier binary, executable, and
+toolchain inputs. `host_volatile`, `time_network`, and `external` always rerun;
+`final_always` bypasses cache during finalization.

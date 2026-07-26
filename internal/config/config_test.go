@@ -26,10 +26,18 @@ policy_files = [".diffdossier/risk.toml"]
 [[gates]]
 id = "unit-test"
 argv = ["go", "test", "./..."]
+cwd = "."
+env_allowlist = ["PATH", "GOCACHE"]
+when_paths = ["**/*.go", "go.mod"]
+depends_on = []
 timeout_seconds = 900
+resource_class = "cpu"
 blocking = true
 cache_class = "worktree_deterministic"
 final_always = true
+network_class = "none"
+expected_writes = [".diffdossier-tmp"]
+redaction_policy = "test-output"
 `
 
 func TestLoadValid(t *testing.T) {
@@ -60,6 +68,8 @@ func TestLoadRejectsUnknownAndInvalid(t *testing.T) {
 		{"schema", strings.Replace(validConfig, "schema_version = 1", "schema_version = 2", 1), "unsupported schema_version"},
 		{"baseline", strings.Replace(validConfig, "baseline = \"refs/remotes/origin/main\"\n", "", 1), "baseline is required"},
 		{"cache", strings.Replace(validConfig, "worktree_deterministic", "forever", 1), "invalid cache_class"},
+		{"dependency", strings.Replace(validConfig, "depends_on = []", `depends_on = ["missing"]`, 1), "invalid dependency"},
+		{"cycle", strings.Replace(validConfig, "depends_on = []", `depends_on = ["unit-test"]`, 1), "invalid dependency"},
 		{"duplicate", strings.Replace(validConfig, "schema_version = 1", "schema_version = 1\nschema_version = 1", 1), "duplicate field"},
 	}
 	for _, test := range tests {

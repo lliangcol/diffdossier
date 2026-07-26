@@ -38,12 +38,20 @@ type Risk struct {
 }
 
 type Gate struct {
-	ID             string
-	Argv           []string
-	TimeoutSeconds int
-	Blocking       bool
-	CacheClass     string
-	FinalAlways    bool
+	ID              string
+	Argv            []string
+	Cwd             string
+	EnvAllowlist    []string
+	WhenPaths       []string
+	DependsOn       []string
+	TimeoutSeconds  int
+	ResourceClass   string
+	Blocking        bool
+	CacheClass      string
+	FinalAlways     bool
+	NetworkClass    string
+	ExpectedWrites  []string
+	RedactionPolicy string
 }
 
 func Default() Config {
@@ -159,6 +167,56 @@ func (c Config) Validate() error {
 		default:
 			return fmt.Errorf("gate %q has invalid cache_class %q", gate.ID, gate.CacheClass)
 		}
+		if gate.Cwd == "" {
+			return fmt.Errorf("gate %q cwd is required", gate.ID)
+		}
+		if gate.ResourceClass != "cpu" && gate.ResourceClass != "io" && gate.ResourceClass != "exclusive" && gate.ResourceClass != "network" && gate.ResourceClass != "external" {
+			return fmt.Errorf("gate %q has invalid resource_class %q", gate.ID, gate.ResourceClass)
+		}
+		if gate.NetworkClass != "none" && gate.NetworkClass != "local" && gate.NetworkClass != "external" {
+			return fmt.Errorf("gate %q has invalid network_class %q", gate.ID, gate.NetworkClass)
+		}
+		for _, relative := range append(append([]string{}, gate.WhenPaths...), gate.ExpectedWrites...) {
+			clean := strings.ReplaceAll(relative, "\\", "/")
+			if clean == "" || strings.HasPrefix(clean, "/") || clean == ".." || strings.HasPrefix(clean, "../") {
+				return fmt.Errorf("gate %q path %q must stay repository-relative", gate.ID, relative)
+			}
+		}
+	}
+	for _, gate := range c.Gates {
+		for _, dependency := range gate.DependsOn {
+			if dependency == gate.ID || !seen[dependency] {
+				return fmt.Errorf("gate %q has invalid dependency %q", gate.ID, dependency)
+			}
+		}
+	}
+	byID := map[string]Gate{}
+	for _, gate := range c.Gates {
+		byID[gate.ID] = gate
+	}
+	visiting, visited := map[string]bool{}, map[string]bool{}
+	var visit func(string) error
+	visit = func(id string) error {
+		if visiting[id] {
+			return fmt.Errorf("gate dependency cycle at %q", id)
+		}
+		if visited[id] {
+			return nil
+		}
+		visiting[id] = true
+		for _, dependency := range byID[id].DependsOn {
+			if err := visit(dependency); err != nil {
+				return err
+			}
+		}
+		visiting[id] = false
+		visited[id] = true
+		return nil
+	}
+	for id := range byID {
+		if err := visit(id); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -195,14 +253,30 @@ func assign(cfg *Config, section string, gateIndex int, key, raw string) error {
 			return parseString(raw, &gate.ID)
 		case "argv":
 			return parseStrings(raw, &gate.Argv)
+		case "cwd":
+			return parseString(raw, &gate.Cwd)
+		case "env_allowlist":
+			return parseStrings(raw, &gate.EnvAllowlist)
+		case "when_paths":
+			return parseStrings(raw, &gate.WhenPaths)
+		case "depends_on":
+			return parseStrings(raw, &gate.DependsOn)
 		case "timeout_seconds":
 			return parseInt(raw, &gate.TimeoutSeconds)
 		case "blocking":
 			return parseBool(raw, &gate.Blocking)
+		case "resource_class":
+			return parseString(raw, &gate.ResourceClass)
 		case "cache_class":
 			return parseString(raw, &gate.CacheClass)
 		case "final_always":
 			return parseBool(raw, &gate.FinalAlways)
+		case "network_class":
+			return parseString(raw, &gate.NetworkClass)
+		case "expected_writes":
+			return parseStrings(raw, &gate.ExpectedWrites)
+		case "redaction_policy":
+			return parseString(raw, &gate.RedactionPolicy)
 		}
 	}
 	return fmt.Errorf("unknown field %q", qualified)

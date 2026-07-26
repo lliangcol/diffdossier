@@ -37,6 +37,20 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return runPlan(args[1:], stdout, stderr)
 	case "record":
 		return runRecord(args[1:], stdout, stderr)
+	case "gates":
+		return runGates(args[1:], stdout, stderr)
+	case "export":
+		return runExport(args[1:], stdout, stderr)
+	case "verify":
+		return runVerify(args[1:], stdout, stderr, false)
+	case "finalize":
+		return runVerify(args[1:], stdout, stderr, true)
+	case "finding":
+		return runFinding(args[1:], stdout, stderr)
+	case "fix":
+		return runFix(args[1:], stdout, stderr)
+	case "refresh":
+		return runRefresh(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n\n", args[0])
 		printUsage(stderr)
@@ -194,6 +208,15 @@ func printUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  diffdossier prepare [--repo PATH] [--config PATH] [--state-dir PATH] [--json]")
 	fmt.Fprintln(writer, "  diffdossier plan [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier record task --task-id ID --result PATH [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier gates plan [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier gates run --trust-execution-plan DIGEST [--trust-shell] [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier export portable --output PATH [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier export public prepare --input PATH --class CLASS --action ACTION --policy-digest DIGEST [--repo PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier verify [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier finalize [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier finding confirm|reject|accept-risk --finding-id ID --operator NAME [options]")
+	fmt.Fprintln(writer, "  diffdossier fix authorize --finding-ids ID[,ID] --scope-digest DIGEST --operator NAME --expires-at RFC3339 [options]")
+	fmt.Fprintln(writer, "  diffdossier refresh [--repo PATH] [--config PATH] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier config validate [--repo PATH] [--config PATH] [--json]")
 	fmt.Fprintln(writer, "  diffdossier help")
 }

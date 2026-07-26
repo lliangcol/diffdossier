@@ -24,6 +24,7 @@ import (
 	"github.com/lliangcol/diffdossier/internal/risk"
 	"github.com/lliangcol/diffdossier/internal/snapshot"
 	"github.com/lliangcol/diffdossier/internal/store"
+	"github.com/lliangcol/diffdossier/internal/workflow"
 	publicschema "github.com/lliangcol/diffdossier/pkg/schema"
 )
 
@@ -213,6 +214,14 @@ func runRecord(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_RESULT_DUPLICATE", err.Error()), ExitEvidence)
 	}
+	ledger := workflow.FindingLedger{SchemaVersion: "1.0", Findings: []workflow.FindingRecord{}}
+	if err := stateStore.ReadRunJSON(runDir, "findings.json", &ledger); err != nil && !os.IsNotExist(err) {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_FINDING_LEDGER", err.Error()), ExitEvidence)
+	}
+	updatedLedger, err := workflow.ImportFindings(ledger, reviewResult, time.Now())
+	if err != nil {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_FINDING_LEDGER", err.Error()), ExitEvidence)
+	}
 	resultDigest := ""
 	for _, record := range updatedIndex.Records {
 		if record.TaskID == task.ID && record.PassID == reviewResult.Reviewer.PassID {
@@ -224,6 +233,9 @@ func runRecord(args []string, stdout, stderr io.Writer) int {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_STATE_WRITE", err.Error()), ExitEvidence)
 	}
 	if err := stateStore.WriteRunJSON(runDir, "results/index.json", updatedIndex); err != nil {
+		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_STATE_WRITE", err.Error()), ExitEvidence)
+	}
+	if err := stateStore.WriteRunJSON(runDir, "findings.json", updatedLedger); err != nil {
 		return writeFailure(stdout, stderr, *jsonOutput, publicschema.NewError("DD_STATE_WRITE", err.Error()), ExitEvidence)
 	}
 	comparison, comparisonWritten, err := buildTaskComparison(stateStore, runDir, index, reviewResult)

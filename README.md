@@ -3,7 +3,7 @@
 DiffDossier is a local-first, provider-neutral, evidence-driven orchestrator
 for reviewing and fixing large Git changes.
 
-The repository is in Phase 4 implementation. No public release, stable CLI, or platform support is claimed yet.
+The repository is in Phase 5 implementation. No public release, stable CLI, or platform support is claimed yet.
 
 ## Current boundaries
 
@@ -11,12 +11,17 @@ The repository is in Phase 4 implementation. No public release, stable CLI, or p
 - The Go module path is `github.com/lliangcol/diffdossier`.
 - The current CLI exposes version, doctor, strict config validate,
   repository-external prepare snapshots, and deterministic plan/manual packet
-  generation. It can strictly import task results with `record task`.
+  generation. It can strictly import task results, govern findings and fix
+  authorization, refresh invalidated work, plan trusted Gates, verify/finalize
+  evidence, and create private portable exports.
 - The internal Provider boundary includes model-free manual/mock implementations
   and an authorization-gated argv-only command protocol. No automatic Codex or
   Claude Code adapter is published.
 - The compatibility spike uses only the Go standard library and the local Git executable.
-- No networked provider, project-defined command, automatic fix, remote write/CI workflow, or public export is enabled.
+- Project-defined Gate execution requires an exact, one-run plan digest and a
+  separate shell-mode acknowledgement. No automatic fix, remote write/CI
+  workflow, public bundle approval/creation/revocation, or networked Provider
+  is enabled by default.
 
 ## Local verification
 
@@ -29,6 +34,9 @@ go run ./cmd/diffdossier config validate --repo . --config diffdossier.example.t
 go run ./cmd/diffdossier prepare --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
 go run ./cmd/diffdossier plan --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
 go run ./cmd/diffdossier record task --repo . --state-dir /absolute/private/state --task-id task-... --result /absolute/result.json --json
+go run ./cmd/diffdossier gates plan --repo . --state-dir /absolute/private/state --json
+go run ./cmd/diffdossier verify --repo . --state-dir /absolute/private/state --json
+go run ./cmd/diffdossier finalize --repo . --state-dir /absolute/private/state --json
 ```
 
 See [configuration](docs/configuration.md), [snapshot semantics](docs/snapshots.md),
@@ -37,6 +45,8 @@ records](docs/adr/README.md), and [the platform compatibility
 spike](docs/platform-compatibility.md). Provider boundaries and manual
 integration status are documented in [providers and results](docs/providers-and-results.md),
 [Codex](docs/integrations/codex.md), and [Claude Code](docs/integrations/claude-code.md).
+The Phase 5 workflow, Gate, report, and export contracts are described in
+[workflow, Gates, and reporting](docs/workflow-gates-reporting.md).
 
 ## Governance and security
 

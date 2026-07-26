@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/fix-authorization.schema.json",
+  "type": "object",
+  "required": ["schema_version", "snapshot_id", "finding_ids", "scope_digest", "authorized_by", "authorized_at", "expires_at", "digest"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
+    "finding_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^finding-[a-f0-9]{24}$"}},
+    "scope_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "authorized_by": {"type": "string", "minLength": 1},
+    "authorized_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  },
+  "additionalProperties": false
+}

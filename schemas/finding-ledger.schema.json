@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/finding-ledger.schema.json",
+  "type": "object",
+  "required": ["schema_version", "findings"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "finding", "task_id", "snapshot_id", "reviewer", "state", "state_operator", "updated_at"],
+        "properties": {
+          "finding_id": {"type": "string", "pattern": "^finding-[a-f0-9]{24}$"},
+          "finding": {"type": "object"},
+          "task_id": {"type": "string", "pattern": "^task-[a-f0-9]{24}$"},
+          "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
+          "reviewer": {"type": "object"},
+          "state": {"enum": ["reported", "needs_confirmation", "confirmed", "rejected", "fix_authorized", "fixed_unverified", "verified_closed", "accepted_risk"]},
+          "state_operator": {"type": "string", "minLength": 1},
+          "reason": {"type": "string"},
+          "owner": {"type": "string"},
+          "expires_at": {"type": "string", "format": "date-time"},
+          "review_trigger": {"type": "string"},
+          "updated_at": {"type": "string", "format": "date-time"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

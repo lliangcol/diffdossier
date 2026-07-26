@@ -17,7 +17,15 @@ policy_files = []
 [[gates]]
 id = "unit-test"
 argv = ["go", "test", "./..."]
+cwd = "."
+env_allowlist = ["PATH", "GOCACHE"]
+when_paths = ["**/*.go", "go.mod", "go.sum"]
+depends_on = []
 timeout_seconds = 900
+resource_class = "cpu"
 blocking = true
 cache_class = "worktree_deterministic"
 final_always = true
+network_class = "none"
+expected_writes = []
+redaction_policy = "test-output"
