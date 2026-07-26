@@ -12,3 +12,5 @@ Versioning once releases begin.
 - Added local-only Git intake, byte-accurate changed-path inventory,
   deterministic snapshots, content-addressed state, locking, resume metadata,
   and the prepare command.
+- Added scoped rule and candidate-contract discovery, fail-closed L0-L4 risk,
+  deterministic dependency-aware task planning, and model-free manual packets.

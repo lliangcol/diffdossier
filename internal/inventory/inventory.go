@@ -38,6 +38,21 @@ type PathIdentity struct {
 	UTF8        *string `json:"path_utf8,omitempty"`
 }
 
+func (path PathIdentity) Raw() ([]byte, error) {
+	decoded, err := base64.StdEncoding.DecodeString(path.BytesBase64)
+	if err != nil {
+		return nil, fmt.Errorf("decode path identity: %w", err)
+	}
+	return decoded, nil
+}
+
+func (path PathIdentity) Display() string {
+	if path.UTF8 != nil {
+		return *path.UTF8
+	}
+	return "base64:" + path.BytesBase64
+}
+
 type Entry struct {
 	Scope               Scope         `json:"scope"`
 	Status              string        `json:"status"`
@@ -72,7 +87,7 @@ func Capture(ctx context.Context, repo *gitrepo.Repo, revisions gitrepo.Revision
 	if len(requested) > 0 {
 		options = requested[0]
 	}
-	var entries []Entry
+	entries := []Entry{}
 	committed, err := diffEntries(ctx, repo, ScopeCommitted, revisions.MergeBase, "HEAD")
 	if err != nil {
 		return Result{}, err

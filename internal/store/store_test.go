@@ -98,3 +98,25 @@ func TestBeginRunPersistsContentAddressedBlob(t *testing.T) {
 		t.Fatalf("stored=%q err=%v", stored, err)
 	}
 }
+
+func TestArtifactContainmentAndStateTransition(t *testing.T) {
+	store, _ := Open(filepath.Join(t.TempDir(), "state"))
+	repository, _ := store.Register(t.TempDir())
+	run, runDir, _ := store.BeginRun(repository, snapshot.Seal{SnapshotID: "snap-test"})
+	if err := store.WriteRunJSON(runDir, "tasks/task.json", map[string]bool{"ok": true}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.WriteRunJSON(runDir, "../escape.json", map[string]bool{}); err == nil {
+		t.Fatal("artifact path escape must fail")
+	}
+	updated, err := store.UpdateRunState(runDir, "CONTRACTED")
+	if err != nil || updated.State != "CONTRACTED" {
+		t.Fatalf("run=%+v err=%v", updated, err)
+	}
+	if _, err := store.UpdateRunState(runDir, "FINALIZED"); err == nil {
+		t.Fatal("invalid transition must fail")
+	}
+	if run.State != "PREPARED" {
+		t.Fatalf("original run mutated: %+v", run)
+	}
+}

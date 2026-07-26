@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/packet.schema.json",
+  "type": "object",
+  "required": ["schema_version", "snapshot_id", "task_id", "task_input_hash", "data_class", "status", "prompt", "task", "files", "total_bytes"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
+    "task_id": {"type": "string", "pattern": "^task-[a-f0-9]{24}$"},
+    "task_input_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "data_class": {"enum": ["public_synthetic", "public_project", "private_project"]},
+    "status": {"enum": ["ready_for_review", "incomplete"]},
+    "prompt": {"type": "string", "minLength": 1},
+    "task": {"$ref": "task.schema.json"},
+    "files": {"type": "array", "minItems": 1},
+    "total_bytes": {"type": "integer", "minimum": 0}
+  },
+  "additionalProperties": false
+}

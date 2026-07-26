@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/risk-assessment.schema.json",
+  "type": "object",
+  "required": ["schema_version", "paths"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "paths": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/lliangcol/diffdossier/internal/platform"
@@ -206,6 +207,51 @@ func (store *Store) LatestRun(repositoryID string) (Run, error) {
 		}
 	}
 	return latest, nil
+}
+
+func (store *Store) RunDir(repositoryID, runID string) (string, error) {
+	if !validID(repositoryID, "repo-", 32) || !validID(runID, "run-", 24) {
+		return "", errors.New("invalid repository or run ID")
+	}
+	return filepath.Join(store.Root, "repositories", repositoryID, "runs", runID), nil
+}
+
+func (store *Store) WriteRunJSON(runDir, relative string, value any) error {
+	clean := filepath.Clean(relative)
+	if clean == "." || filepath.IsAbs(clean) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return errors.New("artifact path escapes run")
+	}
+	target := filepath.Join(runDir, clean)
+	relativeCheck, err := filepath.Rel(runDir, target)
+	if err != nil || relativeCheck == ".." || strings.HasPrefix(relativeCheck, ".."+string(filepath.Separator)) {
+		return errors.New("artifact path escapes run")
+	}
+	return atomicJSON(target, value)
+}
+
+func (store *Store) UpdateRunState(runDir, next string) (Run, error) {
+	lock, err := AcquireRunLock(runDir)
+	if err != nil {
+		return Run{}, err
+	}
+	defer lock.Release()
+	var run Run
+	if err := readJSON(filepath.Join(runDir, "run.json"), &run); err != nil {
+		return Run{}, err
+	}
+	if !allowedTransition(run.State, next) {
+		return Run{}, fmt.Errorf("invalid run transition %s -> %s", run.State, next)
+	}
+	previous := run.State
+	if _, err := store.AppendEvent(runDir, "state_transition", map[string]string{"from": previous, "to": next}); err != nil {
+		return Run{}, err
+	}
+	run.State = next
+	run.UpdatedAt = time.Now().UTC()
+	if err := atomicJSON(filepath.Join(runDir, "run.json"), run); err != nil {
+		return Run{}, err
+	}
+	return run, nil
 }
 
 func (store *Store) AppendEvent(runDir, eventType string, payload any) (Event, error) {
@@ -403,4 +449,28 @@ func randomID(prefix string, bytesCount int) (string, error) {
 		return "", err
 	}
 	return prefix + hex.EncodeToString(value), nil
+}
+
+func validID(value, prefix string, hexLength int) bool {
+	if len(value) != len(prefix)+hexLength || !strings.HasPrefix(value, prefix) {
+		return false
+	}
+	_, err := hex.DecodeString(value[len(prefix):])
+	return err == nil
+}
+
+func allowedTransition(current, next string) bool {
+	allowed := map[string]map[string]bool{
+		"PREPARED":       {"CONTRACTED": true, "BLOCKED": true},
+		"CONTRACTED":     {"REVIEWING": true, "BLOCKED": true},
+		"REVIEWING":      {"REVIEWED": true, "BLOCKED": true},
+		"REVIEWED":       {"FIX_AUTHORIZED": true, "GATED": true, "BLOCKED": true},
+		"FIX_AUTHORIZED": {"MUTATED": true, "BLOCKED": true},
+		"MUTATED":        {"PREPARED": true, "BLOCKED": true},
+		"GATED":          {"REREVIEWED": true, "BLOCKED": true},
+		"REREVIEWED":     {"FINALIZED": true, "BLOCKED": true},
+		"FINALIZED":      {"EXPORTED": true},
+		"BLOCKED":        {"PREPARED": true, "REVIEWING": true},
+	}
+	return allowed[current][next]
 }

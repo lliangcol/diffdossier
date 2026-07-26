@@ -1,0 +1,11 @@
+schema_version = 1
+
+[[rules]]
+glob = "migrations/*"
+level = "L4"
+reason = "database migration requires design, rollback, and an accountable owner"
+
+[[rules]]
+glob = ".github/workflows/*"
+level = "L3"
+reason = "delivery automation changes require an independent review perspective"

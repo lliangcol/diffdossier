@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/plan.schema.json",
+  "type": "object",
+  "required": ["schema_version", "snapshot_id", "tasks", "coverage_counts"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "snapshot_id": {"type": "string", "pattern": "^snap-[a-f0-9]{64}$"},
+    "tasks": {"type": "array", "items": {"$ref": "task.schema.json"}},
+    "coverage_counts": {"type": "object", "additionalProperties": {"type": "integer", "const": 1}}
+  },
+  "additionalProperties": false
+}

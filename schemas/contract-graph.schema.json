@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lliangcol/diffdossier/schemas/contract-graph.schema.json",
+  "type": "object",
+  "required": ["schema_version", "rules", "contracts"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "rules": {"type": "array"},
+    "contracts": {"type": "array"}
+  },
+  "additionalProperties": false
+}

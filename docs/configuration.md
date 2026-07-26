@@ -23,3 +23,7 @@ resolving a local ref is not evidence that the remote is fresh.
 The logical JSON model is published in schemas/config.schema.json. The TOML
 surface accepted by the current parser is demonstrated by
 diffdossier.example.toml; unsupported TOML features fail closed.
+
+Optional risk policy files use the strict format shown in
+policies/risk.example.toml. Policy rules may raise inferred risk but can never
+lower it. Invalid, missing, escaping, or unknown policy input blocks planning.

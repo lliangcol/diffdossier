@@ -12,7 +12,7 @@ default_provider = "manual"
 retention_days = 30
 
 [risk]
-policy_files = [".diffdossier/risk.toml"]
+policy_files = []
 
 [[gates]]
 id = "unit-test"
