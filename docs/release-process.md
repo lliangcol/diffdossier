@@ -7,6 +7,13 @@ main ruleset described below, Provider compatibility smoke, ONM migration, the
 `v0.1.0-beta.1` tag, attestation, and public prerelease operation. Execution
 still fails closed until each preceding check has produced its own evidence.
 
+As of 2026-07-27, the pinned Codex synthetic smoke has passed. The Claude Code
+boundary correctly failed with zero accepted results because no compliant API
+key or API-key helper was present. The `v0.1.0-beta.1` tag and public
+prerelease remain blocked until the successful Claude Code live smoke exists,
+or a separately reviewed release-scope decision removes that automatic adapter
+from the release. Consumer OAuth is not an allowed workaround.
+
 ## Required approvals and evidence
 
 1. The maintainer or legal owner confirms `LICENSE`, `NOTICE`, contribution
