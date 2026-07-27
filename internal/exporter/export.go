@@ -23,9 +23,10 @@ import (
 )
 
 type PortableManifest struct {
-	SchemaVersion string            `json:"schema_version"`
-	RunDigest     string            `json:"run_digest"`
-	Files         map[string]string `json:"files"`
+	SchemaVersion      string            `json:"schema_version"`
+	RunDigest          string            `json:"run_digest"`
+	Files              map[string]string `json:"files"`
+	PathSanitizedFiles []string          `json:"path_sanitized_files,omitempty"`
 }
 
 // Portable builds a deterministic private archive. Locks, logs, and trust or
@@ -33,6 +34,7 @@ type PortableManifest struct {
 func Portable(runDir string) ([]byte, PortableManifest, error) {
 	files := map[string][]byte{}
 	digests := map[string]string{}
+	pathSanitized := []string{}
 	err := filepath.WalkDir(runDir, func(path string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -52,6 +54,13 @@ func Portable(runDir string) ([]byte, PortableManifest, error) {
 		if err != nil {
 			return err
 		}
+		content, sanitized, err := sanitizePortablePaths(rel, content)
+		if err != nil {
+			return err
+		}
+		if sanitized {
+			pathSanitized = append(pathSanitized, rel)
+		}
 		files[rel] = content
 		digests[rel] = sha(content)
 		return nil
@@ -59,7 +68,8 @@ func Portable(runDir string) ([]byte, PortableManifest, error) {
 	if err != nil {
 		return nil, PortableManifest{}, err
 	}
-	manifest := PortableManifest{SchemaVersion: "1.0", Files: digests}
+	sort.Strings(pathSanitized)
+	manifest := PortableManifest{SchemaVersion: "1.0", Files: digests, PathSanitizedFiles: pathSanitized}
 	manifest.RunDigest = digestMap(digests)
 	encoded, _ := json.MarshalIndent(manifest, "", "  ")
 	files["portable-manifest.json"] = append(encoded, '\n')
@@ -87,6 +97,112 @@ func Portable(runDir string) ([]byte, PortableManifest, error) {
 		return nil, PortableManifest{}, err
 	}
 	return output.Bytes(), manifest, nil
+}
+
+func sanitizePortablePaths(name string, content []byte) ([]byte, bool, error) {
+	if strings.HasSuffix(name, ".json") {
+		var value any
+		if err := json.Unmarshal(content, &value); err != nil {
+			return nil, false, err
+		}
+		sanitized := sanitizePortableValue(value, "")
+		if !sanitized {
+			return content, false, nil
+		}
+		encoded, err := json.MarshalIndent(value, "", "  ")
+		if err != nil {
+			return nil, false, err
+		}
+		return append(encoded, '\n'), true, nil
+	}
+	if strings.HasSuffix(name, ".jsonl") {
+		lines := bytes.Split(content, []byte{'\n'})
+		sanitized := false
+		for index, line := range lines {
+			if len(bytes.TrimSpace(line)) == 0 {
+				continue
+			}
+			var value any
+			if err := json.Unmarshal(line, &value); err != nil {
+				return nil, false, err
+			}
+			if sanitizePortableValue(value, "") {
+				sanitized = true
+				encoded, err := json.Marshal(value)
+				if err != nil {
+					return nil, false, err
+				}
+				lines[index] = encoded
+			}
+		}
+		if sanitized {
+			return bytes.Join(lines, []byte{'\n'}), true, nil
+		}
+	}
+	return content, false, nil
+}
+
+func sanitizePortableValue(value any, contextKey string) bool {
+	sanitized := false
+	switch typed := value.(type) {
+	case map[string]any:
+		for key, item := range typed {
+			text, ok := item.(string)
+			if ok && isPortablePathField(key) && isAbsolutePortablePath(text) {
+				replacement := "[portable-path]"
+				if key == "cwd" && typed["cwd_class"] == "repository" {
+					replacement = "."
+				} else if key == "executable" {
+					if requested, requestedOK := typed["requested_executable"].(string); requestedOK && !isAbsolutePortablePath(requested) {
+						replacement = requested
+					}
+				}
+				typed[key] = replacement
+				sanitized = true
+				continue
+			}
+			if sanitizePortableValue(item, key) {
+				sanitized = true
+			}
+		}
+	case []any:
+		for index, item := range typed {
+			text, ok := item.(string)
+			if ok && isPortablePathList(contextKey) && isAbsolutePortablePath(text) {
+				typed[index] = "[portable-path]"
+				sanitized = true
+				continue
+			}
+			if sanitizePortableValue(item, contextKey) {
+				sanitized = true
+			}
+		}
+	}
+	return sanitized
+}
+
+func isPortablePathField(key string) bool {
+	switch key {
+	case "cwd", "executable", "requested_executable", "path", "repo", "repository_root", "working_directory":
+		return true
+	}
+	return strings.HasSuffix(key, "_path") || strings.HasSuffix(key, "_dir") || strings.HasSuffix(key, "_directory") || strings.HasSuffix(key, "_root")
+}
+
+func isPortablePathList(key string) bool {
+	switch key {
+	case "argv", "expected_writes", "paths":
+		return true
+	default:
+		return false
+	}
+}
+
+func isAbsolutePortablePath(value string) bool {
+	if strings.HasPrefix(value, "/") || strings.HasPrefix(value, `\\`) {
+		return true
+	}
+	return len(value) >= 3 && ((value[0] >= 'A' && value[0] <= 'Z') || (value[0] >= 'a' && value[0] <= 'z')) && value[1] == ':' && (value[2] == '/' || value[2] == '\\')
 }
 
 type ScanFinding struct {
