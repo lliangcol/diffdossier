@@ -379,6 +379,7 @@ func printUsage(writer io.Writer) {
 	fmt.Fprintln(writer, "  diffdossier packet task --task-id ID [--repo PATH] [--config PATH] [--baseline REF] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier record contract [--repo PATH] [--config PATH] [--baseline REF] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier record task --task-id ID --result PATH [--repo PATH] [--config PATH] [--baseline REF] [--state-dir PATH] [--run-id ID] [--json]")
+	fmt.Fprintln(writer, "  diffdossier record batch --manifest PATH [--repo PATH] [--config PATH] [--baseline REF] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier review run --task-id ID [--config PATH] [--baseline REF] [--provider manual|command] [provider authorization options] [--json]")
 	fmt.Fprintln(writer, "  diffdossier gates plan [--repo PATH] [--config PATH] [--baseline REF] [--state-dir PATH] [--run-id ID] [--json]")
 	fmt.Fprintln(writer, "  diffdossier gates run --trust-execution-plan DIGEST [--trust-shell] [--repo PATH] [--config PATH] [--baseline REF] [--state-dir PATH] [--run-id ID] [--json]")

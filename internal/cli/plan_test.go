@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -106,6 +107,67 @@ func TestRecordTaskCompletesEveryRequiredPass(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(runDir, "results", "index.json")); err != nil {
 		t.Fatalf("result index missing: %v", err)
+	}
+}
+
+func TestRecordBatchCompletesEveryRequiredPass(t *testing.T) {
+	repo, state, runDir := plannedFixture(t)
+	taskPaths, err := filepath.Glob(filepath.Join(runDir, "tasks", "*.json"))
+	if err != nil || len(taskPaths) == 0 {
+		t.Fatalf("task paths=%v err=%v", taskPaths, err)
+	}
+	entries := []map[string]string{}
+	for _, taskPath := range taskPaths {
+		var task planner.Task
+		readFixtureJSON(t, taskPath, &task)
+		var packet packets.Packet
+		readFixtureJSON(t, filepath.Join(runDir, "packets", task.ID+".json"), &packet)
+		for passIndex, perspective := range task.Perspectives {
+			coverage := make([]results.Coverage, 0, len(task.Paths))
+			for _, path := range task.Paths {
+				coverage = append(coverage, results.Coverage{
+					Scope: string(path.Scope), PathBytesBase64: path.PathBytesBase64,
+					Status: path.RequiredCoverage, Evidence: "batch fixture reviewed exact current and previous blobs",
+				})
+			}
+			result := results.Result{
+				SchemaVersion: "1.0", TaskID: task.ID, SnapshotID: task.SnapshotID,
+				TaskInputHash: packet.TaskInputHash,
+				Reviewer: results.Reviewer{
+					Provider: "manual", Model: "human-fixture", ModelFamily: "human",
+					PassID: task.ID + "-batch-" + perspective, Perspective: perspective,
+					PromptDigest: packet.PromptDigest, ContextIsolation: "independent batch pass " + perspective,
+				},
+				Coverage: coverage, Findings: []results.Finding{},
+				NeedsConfirmation: []results.Confirmation{}, ResidualRisks: []results.ResidualRisk{},
+				Status: "completed",
+			}
+			resultPath := filepath.Join(t.TempDir(), fmt.Sprintf("result-%d.json", passIndex))
+			writeFixtureJSON(t, resultPath, result)
+			entries = append(entries, map[string]string{"task_id": task.ID, "result_path": resultPath})
+		}
+	}
+	manifestPath := filepath.Join(t.TempDir(), "manifest.json")
+	writeFixtureJSON(t, manifestPath, map[string]any{"schema_version": "1.0", "results": entries})
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"record", "batch", "--repo", repo, "--state-dir", state,
+		"--manifest", manifestPath, "--json",
+	}, &stdout, &stderr)
+	if code != ExitOK {
+		t.Fatalf("code=%d stderr=%s stdout=%s", code, stderr.String(), stdout.String())
+	}
+	var run struct {
+		State string `json:"state"`
+	}
+	readFixtureJSON(t, filepath.Join(runDir, "run.json"), &run)
+	if run.State != "REVIEWED" {
+		t.Fatalf("run state=%s, want REVIEWED", run.State)
+	}
+	var index results.Index
+	readFixtureJSON(t, filepath.Join(runDir, "results", "index.json"), &index)
+	if len(index.Records) != len(entries) {
+		t.Fatalf("records=%d, want %d", len(index.Records), len(entries))
 	}
 }
 

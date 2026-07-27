@@ -55,6 +55,7 @@ go run ./cmd/diffdossier config validate --repo . --config diffdossier.example.t
 go run ./cmd/diffdossier prepare --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --data-class private_project --json
 go run ./cmd/diffdossier plan --repo . --config diffdossier.example.toml --state-dir /absolute/private/state --json
 go run ./cmd/diffdossier record task --repo . --state-dir /absolute/private/state --task-id task-... --result /absolute/result.json --json
+go run ./cmd/diffdossier record batch --repo . --state-dir /absolute/private/state --manifest /absolute/batch.json --json
 go run ./cmd/diffdossier gates plan --repo . --state-dir /absolute/private/state --json
 go run ./cmd/diffdossier verify --repo . --state-dir /absolute/private/state --json
 go run ./cmd/diffdossier finalize --repo . --state-dir /absolute/private/state --json
