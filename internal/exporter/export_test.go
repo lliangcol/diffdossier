@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,6 +18,10 @@ import (
 func TestPortableExcludesAuthorityAndIsDeterministic(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "run.json"), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	gatePlan := []byte(`{"gates":[{"requested_executable":"git","executable":"/Users/example/bin/git","argv":["git","/Users/example/repo/file"],"cwd":"C:\\Users\\example\\repo","cwd_class":"repository","path_bytes_base64":"/w=="}]}`)
+	if err := os.WriteFile(filepath.Join(dir, "gate-plan.json"), gatePlan, 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(dir, "approvals"), 0o700); err != nil {
@@ -41,9 +46,33 @@ func TestPortableExcludesAuthorityAndIsDeterministic(t *testing.T) {
 		if file.Name == "approvals/trust.json" {
 			t.Fatal("authority leaked")
 		}
+		if file.Name == "gate-plan.json" {
+			reader, openErr := file.Open()
+			if openErr != nil {
+				t.Fatal(openErr)
+			}
+			content, readErr := io.ReadAll(reader)
+			_ = reader.Close()
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			text := string(content)
+			if strings.Contains(text, "/Users/example") || strings.Contains(text, `C:\\Users`) {
+				t.Fatalf("absolute path leaked: %s", text)
+			}
+			if !strings.Contains(text, `"executable": "git"`) || !strings.Contains(text, `"cwd": "."`) {
+				t.Fatalf("portable path projection is incomplete: %s", text)
+			}
+			if !strings.Contains(text, `"path_bytes_base64": "/w=="`) {
+				t.Fatalf("non-path evidence was altered: %s", text)
+			}
+		}
 	}
 	if manifest.RunDigest == "" {
 		t.Fatal("missing manifest digest")
+	}
+	if len(manifest.PathSanitizedFiles) != 1 || manifest.PathSanitizedFiles[0] != "gate-plan.json" {
+		t.Fatalf("path sanitization was not declared: %+v", manifest.PathSanitizedFiles)
 	}
 }
 
