@@ -30,8 +30,11 @@ func runRecord(args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 && args[0] == "contract" {
 		return runPlan(args[1:], stdout, stderr)
 	}
+	if len(args) > 0 && args[0] == "batch" {
+		return runRecordBatch(args[1:], stdout, stderr)
+	}
 	if len(args) == 0 || args[0] != "task" {
-		fmt.Fprintln(stderr, "usage: diffdossier record contract ... | diffdossier record task --task-id ID --result PATH ...")
+		fmt.Fprintln(stderr, "usage: diffdossier record contract ... | diffdossier record task --task-id ID --result PATH ... | diffdossier record batch --manifest PATH ...")
 		return ExitUsage
 	}
 	flags := flag.NewFlagSet("record task", flag.ContinueOnError)

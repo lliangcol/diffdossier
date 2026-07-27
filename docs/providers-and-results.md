@@ -29,6 +29,25 @@ also rejects a handshake that reports required or unknown network access.
 
 `diffdossier record task` imports a result only when the current snapshot is still fresh and the result binds the exact task input. Providers may report findings but cannot mark them confirmed. A task counts only completed results with its required coverage and perspectives. Result files and an immutable pass index stay in the private state directory.
 
+For a large manual migration, `diffdossier record batch --manifest PATH` imports
+multiple result files under one run lock. The batch performs one complete fresh
+snapshot check before parsing and another before writing, while every result is
+still validated against its exact reconstructed task and packet. The manifest is
+strict JSON and contains no embedded result bytes:
+
+```json
+{
+  "schema_version": "1.0",
+  "results": [
+    {"task_id": "task-0123456789abcdef01234567", "result_path": "/absolute/private/result.json"}
+  ]
+}
+```
+
+The batch is capped at 1000 entries and 64 MiB of regular result files, requires
+absolute result paths, rejects duplicate task/pass pairs, and does not weaken
+independent-context or required-perspective completion rules.
+
 Result Schema 1.1 is the current Provider-output contract and requires every
 finding to carry an explicit non-negative `line`, including `0` when a finding
 is not line-specific. Legacy Result Schema 1.0 remains readable for existing
