@@ -1,8 +1,11 @@
 # Governance
 
-DiffDossier is currently maintained by `liuliang1` (Liu Liang), the GitHub
-repository owner. Decisions are recorded in issues, pull requests, architecture
-decision records, and governance records.
+DiffDossier is maintained by Liu Liang. The GitHub repository owner account is
+[`lliangcol`](https://github.com/lliangcol); `liuliang1` is the established
+maintainer handle for the same person. The canonical role mapping is recorded
+in [`docs/governance/identity-and-roles.md`](docs/governance/identity-and-roles.md).
+Decisions are recorded in issues, pull requests, architecture decision records,
+and governance records.
 
 - Apache-2.0 is the project license.
 - Contributions use DCO sign-off; no CLA is required.

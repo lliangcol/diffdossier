@@ -9,8 +9,11 @@ on main; this policy will list supported release lines before v1.0.
 
 Do not open a public issue for a suspected vulnerability or leaked secret.
 Use GitHub private vulnerability reporting for this repository. If that feature
-is unavailable, contact the repository owner through a private GitHub channel
-and include only the minimum reproduction needed.
+is unavailable, contact Liu Liang through the repository owner account
+[`lliangcol`](https://github.com/lliangcol) by a private GitHub channel and
+include only the minimum reproduction needed. `liuliang1` is the maintainer
+handle for the same person; see
+[`docs/governance/identity-and-roles.md`](docs/governance/identity-and-roles.md).
 
 Do not include real credentials, private source, or third-party personal data.
 Maintainers will acknowledge a report, assess severity, coordinate a fix, and

@@ -1,16 +1,20 @@
 # Release process
 
 DiffDossier has no public release yet. This document defines the evidence that
-must exist before a maintainer creates one. On 2026-07-27, maintainer
-`liuliang1` explicitly authorized the pinned CI and release workflows, the
-main ruleset described below, Provider compatibility smoke, ONM migration, the
-`v0.1.0-beta.1` tag, attestation, and public prerelease operation. Execution
-still fails closed until each preceding check has produced its own evidence.
+must exist before a maintainer creates one. On 2026-07-27, maintainer Liu Liang
+(`liuliang1`; GitHub repository owner account `lliangcol`) explicitly authorized
+the pinned CI and release workflows, the main ruleset described below, Provider
+compatibility smoke, ONM migration, the `v0.1.0-beta.1` tag, attestation, and
+public prerelease operation. Execution still fails closed until each preceding
+check has produced its own evidence.
+
+The current repository owner, maintainer, copyright, and DCO role mapping is
+defined in [`docs/governance/identity-and-roles.md`](governance/identity-and-roles.md).
 
 As of 2026-07-27, the pinned Codex synthetic smoke has passed. The Claude Code
 boundary correctly failed with zero accepted results because no compliant API
-key or API-key helper was present. Maintainer `liuliang1` subsequently accepted
-the beta-only risk in
+key or API-key helper was present. Maintainer Liu Liang (`liuliang1`)
+subsequently accepted the beta-only risk in
 `docs/governance/beta-claude-smoke-exception.md`, so that successful smoke is
 not a `v0.1.0-beta.1` publication blocker. The exception does not claim a pass,
 does not allow consumer OAuth, and expires before a stable release.

@@ -58,11 +58,11 @@
 
 | ID | 内容 | 状态 | updated_at | 依赖 | 完成证据 |
 |---|---|---|---|---|---|
-| DD-CTRL-001 | 建立每轮执行前的基线检查清单：工作树、分支、HEAD、远端差异、已有 Release、相关 CI、任务依赖和仓库规则。 | pending | 2026-07-27T23:58:02+08:00 | 无 | 清单落盘，并在一次后续工作包中完整使用。 |
-| DD-CTRL-002 | 为本计划建立状态更新和证据记录约定，确保任务状态变更与代码、文档或外部证据在同一轮变更集中记录；是否提交由用户另行授权。 | pending | 2026-07-28T00:26:49+08:00 | DD-CTRL-001 | 至少一次状态迁移记录包含旧状态、新状态、时间、证据和下一步，且没有擅自提交。 |
-| DD-CTRL-003 | 定义产品化核心指标：首次成功时间、安装成功率、可复现案例数、支持仓库数、Provider 数、Schema 兼容率、误报率和 Release 节奏。 | pending | 2026-07-27T23:58:02+08:00 | 无 | 指标有定义、采集方式、基线、目标值和负责人。 |
-| DD-CTRL-004 | 将分析中的每项结论分类为“已完成”“部分完成”“仍缺失”“需 live 验证”，避免把旧快照直接转成实施任务。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-001 | 形成带证据链接的差距矩阵，并映射到本计划 ID。 |
-| DD-CTRL-005 | 建立决策记录规则：涉及公共契约、依赖、网络、命令执行、发布、安全或数据公开的设计先写 ADR 或等价决策记录。 | pending | 2026-07-27T23:58:02+08:00 | 无 | CONTRIBUTING 或规划文档引用该规则，且模板可用。 |
+| DD-CTRL-001 | 建立每轮执行前的基线检查清单：工作树、分支、HEAD、远端差异、已有 Release、相关 CI、任务依赖和仓库规则。 | completed | 2026-07-28T11:14:07+08:00 | 无 | 清单落盘，并在一次后续工作包中完整使用。 |
+| DD-CTRL-002 | 为本计划建立状态更新和证据记录约定，确保任务状态变更与代码、文档或外部证据在同一轮变更集中记录；是否提交由用户另行授权。 | completed | 2026-07-28T11:15:12+08:00 | DD-CTRL-001 | 至少一次状态迁移记录包含旧状态、新状态、时间、证据和下一步，且没有擅自提交。 |
+| DD-CTRL-003 | 定义产品化核心指标：首次成功时间、安装成功率、可复现案例数、支持仓库数、Provider 数、Schema 兼容率、误报率和 Release 节奏。 | completed | 2026-07-28T11:18:27+08:00 | 无 | 指标有定义、采集方式、基线、目标值和负责人。 |
+| DD-CTRL-004 | 将分析中的每项结论分类为“已完成”“部分完成”“仍缺失”“需 live 验证”，避免把旧快照直接转成实施任务。 | completed | 2026-07-28T11:21:29+08:00 | DD-CTRL-001 | 形成带证据链接的差距矩阵，并映射到本计划 ID。 |
+| DD-CTRL-005 | 建立决策记录规则：涉及公共契约、依赖、网络、命令执行、发布、安全或数据公开的设计先写 ADR 或等价决策记录。 | completed | 2026-07-28T11:24:11+08:00 | 无 | CONTRIBUTING 或规划文档引用该规则，且模板可用。 |
 
 ### 0.1 公共契约基线
 
@@ -78,9 +78,9 @@
 
 | ID | 内容 | 状态 | updated_at | 依赖 | 完成证据 |
 |---|---|---|---|---|---|
-| DD-DOC-001 | 由维护者确认 `liuliang1`、`lliangcol` 和 Liu Liang 的关系，以及各自应承担的仓库 owner、maintainer、版权和签署身份。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-001 | 有明确人工决定；不得仅依据用户名相似性推断。 |
-| DD-DOC-002 | 按 DD-DOC-001 的决定统一 GOVERNANCE、NOTICE、SECURITY、SUPPORT、CONTRIBUTING 和 Release 文档中的身份表达。 | pending | 2026-07-28T00:14:02+08:00 | DD-DOC-001 | 全仓身份搜索无未解释冲突，文档 review 通过。 |
-| DD-DOC-003 | 定义 checkpoint 元数据规范，至少包括 `Status`、`Captured-at`、`Source-commit`、`Superseded-by` 和“不可作为当前状态”的提示。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-005 | 规范文档和示例通过 review。 |
+| DD-DOC-001 | 由维护者确认 `liuliang1`、`lliangcol` 和 Liu Liang 的关系，以及各自应承担的仓库 owner、maintainer、版权和签署身份。 | completed | 2026-07-28T11:29:55+08:00 | DD-CTRL-001 | 有明确人工决定；不得仅依据用户名相似性推断。 |
+| DD-DOC-002 | 按 DD-DOC-001 的决定统一 GOVERNANCE、NOTICE、SECURITY、SUPPORT、CONTRIBUTING 和 Release 文档中的身份表达。 | completed | 2026-07-28T11:35:46+08:00 | DD-DOC-001 | 全仓身份搜索无未解释冲突，文档 review 通过。 |
+| DD-DOC-003 | 定义 checkpoint 元数据规范，至少包括 `Status`、`Captured-at`、`Source-commit`、`Superseded-by` 和“不可作为当前状态”的提示。 | completed | 2026-07-28T11:40:39+08:00 | DD-CTRL-005 | 规范文档和示例通过 review。 |
 | DD-DOC-004 | 逐个分类 `docs/checkpoints/` 现有文件为 current、historical 或 superseded，并补齐 DD-DOC-003 元数据。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-003 | 所有 checkpoint 均有状态；历史内容没有被当作当前事实引用。 |
 | DD-DOC-005 | 依据最新原生 CI 与发布运行重建平台证据矩阵，分开 Tier、原生运行、race、跨编译、安装 smoke、未验证语义和最低版本。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-001 | 每项支持声明可追溯到具体 run、runner、版本和 commit。 |
 | DD-DOC-006 | 更新 `docs/platform-compatibility.md`，删除已被证据推翻的“原生验证全部待完成”表述，同时保留 arm64、ACL、路径、Unicode 等真实缺口。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-005 | 支持矩阵与当前 CI 证据一致，且不把跨编译提升为原生证据。 |
@@ -439,3 +439,19 @@
 | 2026-07-28T00:40:22+08:00 | plan-review-11 | repaired | 补齐定位、治理、Scorecard 结果可见性、P1 真实仓库验证和包管理分发设计等明确要求维护者或人工判断的角色门禁。 | 对新快照重新执行完整复审；本行不代表 clean seal。 |
 | 2026-07-28T00:41:10+08:00 | plan-review-12 | repaired | 将威胁模型复核中由有权角色接受漂移的决定纳入人工门禁，避免实现者或 Agent 自行接受边界偏差。 | 对新快照重新执行完整复审；本行不代表 clean seal。 |
 | 2026-07-28T00:43:36+08:00 | plan-review-13 | repaired | 消除 clean review 必须写回被审文件而立即改变 SHA 的日志悖论；无变更复审改为在外部记录中绑定完整文件 SHA。 | 对新快照重新执行完整复审；本行不代表 clean seal。 |
+| 2026-07-28T11:06:32+08:00 | DD-CTRL-001 | pending → in_progress | 新增 `docs/plans/2026-07-28-execution-baseline-checklist.md`，其中包含八项可重复检查、完成规则和本轮 live Git/GitHub 初始基线记录（HEAD `aa611755554711dd44fab388f488fd2867ed093e`、三个 beta Pre-release、当前 CI 成功）。 | 下一工作包须完整使用该清单；完成记录后才可将 DD-CTRL-001 标为 completed。 |
+| 2026-07-28T11:14:07+08:00 | DD-CTRL-001 | in_progress → completed | `DD-CTRL-002` 工作包完整复跑 `docs/plans/2026-07-28-execution-baseline-checklist.md` 的八项检查；当前 HEAD/远端 main 均为 `aa611755554711dd44fab388f488fd2867ed093e`，Release、CI 与 ruleset 均以本轮只读查询记录。 | DD-CTRL-001 完成；后续每个工作包仍须复跑清单。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:14:07+08:00 | DD-CTRL-002 | pending → in_progress | 新增 `docs/plans/2026-07-28-task-state-evidence-convention.md`，规定任务表、执行日志、可复现证据、基线清单和交付边界须同轮记录。 | 复核约定、计划状态和 diff；满足验收后再完成 DD-CTRL-002。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:15:12+08:00 | DD-CTRL-002 | in_progress → completed | 已复核状态/证据约定包含任务 ID、旧/新状态、时间、证据、下一步/风险与交付边界；本轮 `DD-CTRL-001` 和 `DD-CTRL-002` 迁移均按该约定记录，并通过 `git diff --check` 与记录字段断言。 | DD-CTRL-002 完成。下一项可选择独立的 DD-CTRL-003 或依赖已解除的 DD-CTRL-004；未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:17:10+08:00 | DD-CTRL-003 | pending → in_progress | 新增 `docs/plans/2026-07-28-product-metrics.md`，定义八项指标、采集口径、零观测起始基线、目标、角色负责人、样本下限与数据边界。 | 复核指标完整性和计划状态后收口；未执行 Git 交付、Provider 调用或外部写操作。 |
+| 2026-07-28T11:18:27+08:00 | DD-CTRL-003 | in_progress → completed | 已复核八项指标均具定义、采集方式、起始基线、目标值和角色负责人，并通过 `git diff --check`、暂存区 diff 检查及 M-01～M-08 字段断言。 | DD-CTRL-003 完成；首份合格账本产生时须替换各项 `N=0 / 不可计算` 基线。未执行 Git 交付、Provider 调用或外部写操作。 |
+| 2026-07-28T11:20:22+08:00 | DD-CTRL-004 | pending → in_progress | 新增 `docs/plans/2026-07-28-analysis-gap-matrix.md`，将“当前基线”八条结论逐项分类为需 live 验证、部分完成或仍缺失，并附本轮证据边界与计划 ID 映射。 | 复核八条覆盖、分类、映射与链接后收口；未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:21:29+08:00 | DD-CTRL-004 | in_progress → completed | 已复核矩阵覆盖当前基线 A-01～A-08，包含四类分类标签、每项本轮证据边界与计划 ID 映射，并通过 `git diff --check`、暂存区 diff 检查和覆盖/字段断言。 | DD-CTRL-004 完成；下一项未阻塞控制任务为 DD-CTRL-005。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:23:11+08:00 | DD-CTRL-005 | pending → in_progress | 新增 `docs/adr/template.md`，并在 `docs/adr/README.md` 与 `CONTRIBUTING.md` 写入高风险设计必须先有 ADR/等价记录的规则；模板覆盖上下文、方案、替代项、后果/验证与逐项外部门禁。 | 复核规则覆盖、模板字段与 CONTRIBUTING 链接后收口；未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:24:11+08:00 | DD-CTRL-005 | in_progress → completed | 已复核 ADR 规则覆盖公共契约、依赖、网络、命令执行、发布、安全和数据公开七类触发条件；模板具备必需字段，CONTRIBUTING 已链接规则，并通过 `git diff --check`、暂存区 diff 检查与字段断言。 | DD-CTRL-005 完成。下一工作包可开始已解除依赖的 DD-DOC-001（需维护者人工身份决定）或阶段零 DD-SCH-001 的调研前置。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:26:53+08:00 | DD-DOC-001 | pending → in_progress | 新增 `docs/plans/2026-07-28-identity-decision-request.md`，记录 GitHub owner 字段、仓库内既有身份文案及其非证明边界，并提供维护者内容绑定确认格式。 | 等待有权维护者确认账户关系、职责与文档表述范围；在此之前不改写身份文档。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:29:55+08:00 | DD-DOC-001 | in_progress → completed | 维护者明确确认 `lliangcol`、`liuliang1` 与 Liu Liang 为同一人；结合本轮 GitHub owner 字段、GOVERNANCE、NOTICE 和 DCO 历史例外，已记录 repository owner、maintainer、版权、DCO 签署及敏感操作批准职责映射。 | DD-DOC-001 完成；DD-DOC-002 可统一仓库文案，但本决定不授权 GitHub 设置、Release 或其他外部写操作。 |
+| 2026-07-28T11:34:11+08:00 | DD-DOC-002 | pending → in_progress | 新增 `docs/governance/identity-and-roles.md` 作为当前规范，并更新 GOVERNANCE、SECURITY、SUPPORT、CONTRIBUTING 与 Release 文档的身份/路由表达；NOTICE 与 DCO 历史记录保留已正确的版权和签署内容。 | 执行全仓身份搜索与 Markdown/diff review，确认无未解释冲突后收口；未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:35:46+08:00 | DD-DOC-002 | in_progress → completed | 已复核 GOVERNANCE、SECURITY、SUPPORT、CONTRIBUTING 和 Release 文档均链接当前身份规范；NOTICE 的 Liu Liang 版权表述、DCO/Release/历史 checkpoint 中的 `liuliang1` 记录均与已确认角色映射一致且保留历史语境。全仓 Markdown 身份搜索、链接字段断言、`git diff --check` 与暂存区 diff 检查通过。 | DD-DOC-002 完成；下一项未阻塞任务为 DD-DOC-003。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:39:44+08:00 | DD-DOC-003 | pending → in_progress | 新增 `docs/checkpoints/README.md`，定义 Status、Captured-at、Source-commit、Superseded-by、Current-state notice 的顺序、取值、约束与完整示例，并规定现有 checkpoint 留待 DD-DOC-004 分类和补齐。 | 复核字段、状态语义、历史提示和示例后收口；外部 main/CI/ruleset 查询超时，仅按 unknown 记录。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T11:40:39+08:00 | DD-DOC-003 | in_progress → completed | 已复核五项元数据字段及其顺序、三种状态语义、历史 checkpoint 固定提示、Source-commit 约束和完整示例；通过 `git diff --check`、暂存区 diff 检查与字段/顺序断言。 | DD-DOC-003 完成；下一项 DD-DOC-004 将逐个分类并补齐现有 checkpoint 元数据。外部 main/CI/ruleset 仍为本轮 unknown，未执行 Git 交付或外部写操作。 |
