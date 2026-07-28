@@ -3,12 +3,13 @@
 DiffDossier is a local-first, provider-neutral, evidence-driven orchestrator
 for reviewing and fixing large Git changes.
 
-The repository has completed local Phase 7 release-preparation engineering. No
-public release, stable CLI, or Tier 1 platform support is claimed yet.
+The repository has completed local Phase 7 release-preparation engineering.
+Public beta Pre-releases exist; no stable release, stable CLI, or Tier 1
+platform support is claimed yet.
 
 ## Current boundaries
 
-- The initial CLI foundation is published on `main` at `github.com/lliangcol/diffdossier`; no release or stability promise exists yet.
+- The initial CLI foundation is published on `main` at `github.com/lliangcol/diffdossier`; public beta Releases do not create a stable compatibility or support promise.
 - The Go module path is `github.com/lliangcol/diffdossier`.
 - The current CLI exposes version, doctor, safe no-overwrite config init,
   strict config validate, repository-external prepare snapshots, and
@@ -39,7 +40,7 @@ public release, stable CLI, or Tier 1 platform support is claimed yet.
   public-export-evidence runs are protected.
 - Maintainer tooling can prepare deterministic multi-platform candidate
   archives, checksums, a minimal SPDX SBOM, and unsigned local provenance. A
-  real tag, GitHub attestation, Actions workflow, and Release remain gated.
+  future tag, GitHub attestation, Actions workflow, and Release changes remain gated.
 
 ## Local verification
 
@@ -76,6 +77,9 @@ The Phase 5 workflow, Gate, report, and export contracts are described in
 [workflow, Gates, and reporting](docs/workflow-gates-reporting.md).
 Release preparation and install verification are documented in
 [the release process](docs/release-process.md) and [install guide](docs/install.md).
+Evidence terms such as `ready`, `verified`, `finalized`, `approved`,
+`mergeable`, `released`, and support Tiers use the
+[evidence terminology](docs/governance/evidence-terminology.md).
 
 ## Governance and security
 

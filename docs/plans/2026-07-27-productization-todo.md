@@ -7,7 +7,7 @@
 - 计划版本：`1.13`
 - 计划状态：`active`
 - 创建时间：`2026-07-27T23:58:02+08:00`
-- 最近更新时间：`2026-07-28T00:43:36+08:00`
+- 最近更新时间：`2026-07-28T14:12:37+08:00`
 - 默认任务状态：`pending`
 - 允许的任务状态：`pending`、`in_progress`、`completed`、`cancelled`
 - 当前主目标：停止横向扩张，优先完成“理解、安装、运行、验证、分享”的产品闭环。
@@ -70,7 +70,7 @@
 
 | ID | 内容 | 状态 | updated_at | 依赖 | 完成证据 |
 |---|---|---|---|---|---|
-| DD-SCH-001 | 建立全部公共 Schema、Go 类型、生产者、消费者、当前版本和稳定级别清单。 | pending | 2026-07-28T00:36:19+08:00 | DD-CTRL-004 | 每个 Schema 有 owner、兼容范围和测试入口。 |
+| DD-SCH-001 | 建立全部公共 Schema、Go 类型、生产者、消费者、当前版本和稳定级别清单。 | completed | 2026-07-28T12:43:39+08:00 | DD-CTRL-004 | 每个 Schema 有 owner、兼容范围和测试入口。 |
 
 ## 1. 阶段一：当前事实与 Beta 产品闭环（P0，目标 0～2 周）
 
@@ -81,20 +81,20 @@
 | DD-DOC-001 | 由维护者确认 `liuliang1`、`lliangcol` 和 Liu Liang 的关系，以及各自应承担的仓库 owner、maintainer、版权和签署身份。 | completed | 2026-07-28T11:29:55+08:00 | DD-CTRL-001 | 有明确人工决定；不得仅依据用户名相似性推断。 |
 | DD-DOC-002 | 按 DD-DOC-001 的决定统一 GOVERNANCE、NOTICE、SECURITY、SUPPORT、CONTRIBUTING 和 Release 文档中的身份表达。 | completed | 2026-07-28T11:35:46+08:00 | DD-DOC-001 | 全仓身份搜索无未解释冲突，文档 review 通过。 |
 | DD-DOC-003 | 定义 checkpoint 元数据规范，至少包括 `Status`、`Captured-at`、`Source-commit`、`Superseded-by` 和“不可作为当前状态”的提示。 | completed | 2026-07-28T11:40:39+08:00 | DD-CTRL-005 | 规范文档和示例通过 review。 |
-| DD-DOC-004 | 逐个分类 `docs/checkpoints/` 现有文件为 current、historical 或 superseded，并补齐 DD-DOC-003 元数据。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-003 | 所有 checkpoint 均有状态；历史内容没有被当作当前事实引用。 |
-| DD-DOC-005 | 依据最新原生 CI 与发布运行重建平台证据矩阵，分开 Tier、原生运行、race、跨编译、安装 smoke、未验证语义和最低版本。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-001 | 每项支持声明可追溯到具体 run、runner、版本和 commit。 |
-| DD-DOC-006 | 更新 `docs/platform-compatibility.md`，删除已被证据推翻的“原生验证全部待完成”表述，同时保留 arm64、ACL、路径、Unicode 等真实缺口。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-005 | 支持矩阵与当前 CI 证据一致，且不把跨编译提升为原生证据。 |
-| DD-DOC-007 | 为 README、SUPPORT、install、release-process、SECURITY、CHANGELOG 建立发布状态对账矩阵，逐条标出当前事实、历史陈述、权威来源和待修正文案。 | pending | 2026-07-28T00:14:02+08:00 | DD-CTRL-004, DD-DOC-005 | 矩阵覆盖全部现时声明，且把“已有 beta、尚未 stable”与历史状态分开。 |
-| DD-DOC-008 | 定义并统一 `ready`、`verified`、`finalized`、`approved`、`mergeable`、`released`、Tier 1/2 等术语。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-005 | 术语表发布，README 和主题文档使用一致。 |
-| DD-DOC-009 | 增加离线文档漂移检查，校验 README、支持矩阵、仓库内声明的版本/Release 元数据和 checkpoint 元数据之间的可自动判定一致性；不得在普通 CI 中把网络查询当作稳定真相。 | pending | 2026-07-28T00:14:02+08:00 | DD-DOC-003, DD-DOC-007 | 本地测试与 CI 均能发现故意植入的仓库内状态冲突，且无需网络。 |
-| DD-DOC-010 | 为无法自动验证的外部事实定义人工复核清单和有效期，避免把一次 GitHub 查询永久写成当前事实。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-009 | 清单包含 owner、ruleset、PVR、Release、required checks 和支持平台。 |
+| DD-DOC-004 | 逐个分类 `docs/checkpoints/` 现有文件为 current、historical 或 superseded，并补齐 DD-DOC-003 元数据。 | completed | 2026-07-28T12:34:37+08:00 | DD-DOC-003 | 所有 checkpoint 均有状态；历史内容没有被当作当前事实引用。 |
+| DD-DOC-005 | 依据最新原生 CI 与发布运行重建平台证据矩阵，分开 Tier、原生运行、race、跨编译、安装 smoke、未验证语义和最低版本。 | completed | 2026-07-28T12:50:42+08:00 | DD-CTRL-001 | 每项支持声明可追溯到具体 run、runner、版本和 commit。 |
+| DD-DOC-006 | 更新 `docs/platform-compatibility.md`，删除已被证据推翻的“原生验证全部待完成”表述，同时保留 arm64、ACL、路径、Unicode 等真实缺口。 | completed | 2026-07-28T12:58:47+08:00 | DD-DOC-005 | 支持矩阵与当前 CI 证据一致，且不把跨编译提升为原生证据。 |
+| DD-DOC-007 | 为 README、SUPPORT、install、release-process、SECURITY、CHANGELOG 建立发布状态对账矩阵，逐条标出当前事实、历史陈述、权威来源和待修正文案。 | completed | 2026-07-28T13:00:40+08:00 | DD-CTRL-004, DD-DOC-005 | 矩阵覆盖全部现时声明，且把“已有 beta、尚未 stable”与历史状态分开。 |
+| DD-DOC-008 | 定义并统一 `ready`、`verified`、`finalized`、`approved`、`mergeable`、`released`、Tier 1/2 等术语。 | completed | 2026-07-28T13:02:04+08:00 | DD-CTRL-005 | 术语表发布，README 和主题文档使用一致。 |
+| DD-DOC-009 | 增加离线文档漂移检查，校验 README、支持矩阵、仓库内声明的版本/Release 元数据和 checkpoint 元数据之间的可自动判定一致性；不得在普通 CI 中把网络查询当作稳定真相。 | completed | 2026-07-28T14:03:18+08:00 | DD-DOC-003, DD-DOC-007 | 本地测试与 CI 均能发现故意植入的仓库内状态冲突，且无需网络。 |
+| DD-DOC-010 | 为无法自动验证的外部事实定义人工复核清单和有效期，避免把一次 GitHub 查询永久写成当前事实。 | completed | 2026-07-28T14:05:29+08:00 | DD-DOC-009 | 清单包含 owner、ruleset、PVR、Release、required checks 和支持平台。 |
 | DD-DOC-011 | 按 DD-DOC-001 的决定更新 GitHub 仓库描述、链接或其他外部身份展示；没有需修改项时记录只读核对结论。 | pending | 2026-07-28T00:14:02+08:00 | DD-DOC-001, DD-GOV-001 | 外部展示与仓库文档一致；任何写操作均有单独授权和回读证据。 |
 
 ### 1.2 定位、README 与首次成功路径
 
 | ID | 内容 | 状态 | updated_at | 依赖 | 完成证据 |
 |---|---|---|---|---|---|
-| DD-UXD-001 | 确认对外定位为“面向大型 Git 变更的本地优先、Provider 中立的评审证据控制层”，并列出不做事项。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-008 | 一句话定位和 3～5 条边界经维护者确认。 |
+| DD-UXD-001 | 确认对外定位为“面向大型 Git 变更的本地优先、Provider 中立的评审证据控制层”，并列出不做事项。 | completed | 2026-07-28T14:52:00+08:00 | DD-DOC-008 | 一句话定位和 3～5 条边界经维护者确认。 |
 | DD-UXD-002 | 写入“small change first”原则：先判断能否安全拆分，只有无法合理拆分的大型变更才进入完整 Dossier 工作流。 | pending | 2026-07-27T23:58:02+08:00 | DD-UXD-001 | README 与规划文档均明确该原则，不鼓励巨大 PR。 |
 | DD-UXD-003 | 定义 5,000 行跨模块变更的演示故事，包括用户痛点、输入、关键步骤、输出和最终证据。 | pending | 2026-07-27T23:58:02+08:00 | DD-UXD-001 | 场景可由公开或合成数据完整复现。 |
 | DD-UXD-004 | 重构 README 骨架与当前可证实内容：Logo/定位、small-change-first 原则、场景、演示入口、核心能力、安装、5 分钟 Quick Start、结果、竞品边界、安全摘要、文档、Roadmap、贡献；详细安全边界继续由主题文档承载。 | pending | 2026-07-28T00:23:39+08:00 | DD-DOC-007, DD-UXD-001, DD-UXD-002, DD-UXD-003, DD-UXD-013 | 新读者在首屏能回答“是什么、为何不同、如何开始”，且没有未完成资产的虚假占位或未证实宣称。 |
@@ -114,22 +114,22 @@
 
 | ID | 内容 | 状态 | updated_at | 依赖 | 完成证据 |
 |---|---|---|---|---|---|
-| DD-REL-001 | 盘点 beta.1～beta.3 的 tag、commit、Release、Actions run、资产和发布说明，记录每版实际证据与缺口。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-001 | 版本矩阵可追溯到 GitHub URL 和 SHA。 |
-| DD-REL-002 | 验证最新 beta 的六平台制品、`SHA256SUMS`、SPDX SBOM、GitHub Attestation、嵌入版本和来源 commit 是否一致。 | pending | 2026-07-27T23:58:02+08:00 | DD-REL-001 | 每个资产均有校验记录；缺失项被明确标记而非推断通过。 |
+| DD-REL-001 | 盘点 beta.1～beta.3 的 tag、commit、Release、Actions run、资产和发布说明，记录每版实际证据与缺口。 | completed | 2026-07-28T13:06:59+08:00 | DD-CTRL-001 | 版本矩阵可追溯到 GitHub URL 和 SHA。 |
+| DD-REL-002 | 验证最新 beta 的六平台制品、`SHA256SUMS`、SPDX SBOM、GitHub Attestation、嵌入版本和来源 commit 是否一致。 | completed | 2026-07-28T13:10:18+08:00 | DD-REL-001 | 每个资产均有校验记录；缺失项被明确标记而非推断通过。 |
 | DD-REL-003 | 在 Windows amd64、Linux amd64、macOS Intel、macOS ARM 上分别执行下载、校验、安装、version、doctor 和 synthetic smoke。 | pending | 2026-07-28T00:14:02+08:00 | DD-REL-002, DD-UXD-005, DD-UXD-006, DD-UXD-007 | 四个平台的原生记录绑定同一 Release 和资产哈希。 |
-| DD-REL-004 | 明确 beta 支持范围、已知限制、配置/输出/Provider Schema 兼容承诺和不支持事项。 | pending | 2026-07-27T23:58:02+08:00 | DD-SCH-001, DD-DOC-005 | SUPPORT、install、release notes 和兼容矩阵一致。 |
-| DD-REL-005 | 补齐撤销、受影响版本标记、升级和回滚说明，明确 Release 不原地修补且不得复用标签。 | pending | 2026-07-27T23:58:02+08:00 | DD-REL-001 | 使用历史 beta 做一次桌面演练，步骤可执行。 |
-| DD-REL-006 | 修正所有仍称“没有公开 Release”的现时文档，并保留“没有 stable release”的准确边界。 | pending | 2026-07-27T23:58:02+08:00 | DD-REL-001, DD-DOC-007 | 文档搜索和人工 review 无矛盾。 |
-| DD-REL-007 | 为下一 beta 建立逐项发布清单：clean tag、CI、制品、checksums、SBOM、attestation、安装 smoke、已知限制、案例和维护者批准。 | pending | 2026-07-27T23:58:02+08:00 | DD-REL-002, DD-REL-004, DD-REL-005 | 清单可失败关闭，并绑定候选 commit。 |
-| DD-REL-008 | 在不创建公开 Release 的隔离候选引用或等价安全环境中演练 Release 工作流，验证失败不会留下半发布或可误认的稳定资产。 | pending | 2026-07-28T00:14:02+08:00 | DD-REL-007 | 演练记录包含故障注入、清理和恢复证据；可重复构建对比仍由 DD-SEC-012 独立验收。 |
-| DD-REL-009 | 决定下一 beta 的版本号、范围、候选 SHA、已知限制和是否进入发布审批；本任务不创建 tag 或 Release。 | pending | 2026-07-28T00:14:02+08:00 | DD-REL-007, DD-REL-008 | 版本决策和候选范围可审计，未获得批准时明确停止。 |
+| DD-REL-004 | 明确 beta 支持范围、已知限制、配置/输出/Provider Schema 兼容承诺和不支持事项。 | completed | 2026-07-28T13:15:03+08:00 | DD-SCH-001, DD-DOC-005 | SUPPORT、install、release notes 和兼容矩阵一致。 |
+| DD-REL-005 | 补齐撤销、受影响版本标记、升级和回滚说明，明确 Release 不原地修补且不得复用标签。 | completed | 2026-07-28T13:11:45+08:00 | DD-REL-001 | 使用历史 beta 做一次桌面演练，步骤可执行。 |
+| DD-REL-006 | 修正所有仍称“没有公开 Release”的现时文档，并保留“没有 stable release”的准确边界。 | completed | 2026-07-28T13:13:18+08:00 | DD-REL-001, DD-DOC-007 | 文档搜索和人工 review 无矛盾。 |
+| DD-REL-007 | 为下一 beta 建立逐项发布清单：clean tag、CI、制品、checksums、SBOM、attestation、安装 smoke、已知限制、案例和维护者批准。 | completed | 2026-07-28T13:18:00+08:00 | DD-REL-002, DD-REL-004, DD-REL-005 | 清单可失败关闭，并绑定候选 commit。 |
+| DD-REL-008 | 在不创建公开 Release 的隔离候选引用或等价安全环境中演练 Release 工作流，验证失败不会留下半发布或可误认的稳定资产。 | completed | 2026-07-28T14:10:18+08:00 | DD-REL-007 | 演练记录包含故障注入、清理和恢复证据；可重复构建对比仍由 DD-SEC-012 独立验收。 |
+| DD-REL-009 | 决定下一 beta 的版本号、范围、候选 SHA、已知限制和是否进入发布审批；本任务不创建 tag 或 Release。 | completed | 2026-07-28T15:14:00+08:00 | DD-REL-007, DD-REL-008 | 版本决策和候选范围可审计，未获得批准时明确停止。 |
 | DD-REL-010 | 在全部 P0 退出门禁通过并获得单独明确授权后，创建新的不可复用 tag/Pre-release，并完成发布后回读与 smoke。 | pending | 2026-07-28T00:14:02+08:00 | DD-REL-009, DD-P0-EXIT-001, DD-P0-EXIT-002, DD-P0-EXIT-003, DD-P0-EXIT-004, DD-P0-EXIT-005, DD-P0-EXIT-006 | tag、候选 SHA、资产、checksum、SBOM、attestation、安装 smoke 和 Release 页面一致；失败按撤销流程处理。 |
 
 ### 1.4 第一个公开、可复现的真实案例
 
 | ID | 内容 | 状态 | updated_at | 依赖 | 完成证据 |
 |---|---|---|---|---|---|
-| DD-CASE-001 | 制定案例选择标准：公开许可、可固定 commit、足够大、包含跨模块风险、允许再分发、没有个人或私有数据。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-005 | 标准通过安全和许可 review。 |
+| DD-CASE-001 | 制定案例选择标准：公开许可、可固定 commit、足够大、包含跨模块风险、允许再分发、没有个人或私有数据。 | completed | 2026-07-28T14:58:41+08:00 | DD-CTRL-005 | 标准通过安全和许可 review。 |
 | DD-CASE-002 | 选择并冻结第一个大型 Go 变更案例，记录上游仓库、许可、base/head SHA、文件数、行数和字节数。 | pending | 2026-07-27T23:58:02+08:00 | DD-CASE-001 | 输入可从公开来源重建，哈希和许可记录完整。 |
 | DD-CASE-003 | 定义对照实验协议：同一输入、单 Prompt 基线、DiffDossier 多任务流程、Provider/模型/Pass/Perspective、超时、Token、成本和人工确认规则。 | pending | 2026-07-27T23:58:02+08:00 | DD-CASE-002 | 协议在运行前冻结，避免按结果修改评价标准。 |
 | DD-CASE-004 | 生成案例的 Inventory、Snapshot、Contract、Risk 和 Task Plan，并保存可公开的确定性摘要。 | pending | 2026-07-27T23:58:02+08:00 | DD-CASE-002, DD-CASE-003 | 重跑得到相同内容摘要；私有状态未进入仓库。 |
@@ -144,18 +144,18 @@
 
 | ID | 内容 | 状态 | updated_at | 依赖 | 完成证据 |
 |---|---|---|---|---|---|
-| DD-GOV-001 | 只读审计当前 GitHub visibility、ruleset、branch protection、required checks、PVR、Actions 权限、Release 和默认分支状态。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-001 | 审计时间、API 结果和证据级别完整记录。 |
-| DD-GOV-002 | 新增 Bug、Feature、Documentation 和 Case Study Issue Forms，并禁止提交私有源码、凭据、路径和日志。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-002 | 表单语法通过，预览和示例完成。 |
-| DD-GOV-003 | 增加 `config.yml`，提供支持、安全披露和讨论入口，关闭不安全的空白敏感报告路径。 | pending | 2026-07-27T23:58:02+08:00 | DD-GOV-002 | GitHub 表单入口符合预期且链接有效。 |
-| DD-GOV-004 | 新增 PR Template，要求范围、风险、测试、兼容性、数据分类、DCO 和授权边界。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-005 | 用示例 PR 验证模板能覆盖代码、Schema、工作流和文档变更。 |
-| DD-GOV-005 | 新增 CODEOWNERS，覆盖核心、Schema、CI/Release、安全、文档和 Provider 协议；owner 必须来自 DD-DOC-001 的决定。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-001 | GitHub 能解析所有 owner，敏感路径无空白覆盖。 |
-| DD-GOV-006 | 新增公开 Roadmap，使用阶段、退出标准和非承诺声明，并链接本计划中的稳定范围。 | pending | 2026-07-27T23:58:02+08:00 | DD-CTRL-003 | Roadmap 不泄露内部数据，也不把目标日期表述为保证。 |
-| DD-GOV-007 | 新增 MAINTAINERS 或扩展 GOVERNANCE，定义角色、决策、Reviewer、继任、失联和利益冲突规则。 | pending | 2026-07-27T23:58:02+08:00 | DD-DOC-001 | 维护者明确确认，文档不把仓库 owner 等同于独立批准。 |
-| DD-GOV-008 | 扩充 beta 最低 CONTRIBUTING：开发环境、当前测试矩阵、DCO、fixture 数据规则、隐私边界和 first issue 流程；尚未稳定的 Schema/Provider/Reporter 政策只链接当前边界，不提前承诺。 | pending | 2026-07-28T00:19:45+08:00 | DD-GOV-004 | 新贡献者可完成一次文档或测试贡献演练。 |
-| DD-GOV-009 | 验证并启用 Private Vulnerability Reporting；若不可用，提供经过确认的私密备用渠道。 | pending | 2026-07-27T23:58:02+08:00 | DD-GOV-001 | GitHub 设置证据和 SECURITY 指引一致；该外部写操作有单独授权。 |
-| DD-GOV-010 | 在 CI 检查名称稳定并实际成功后，配置 main ruleset：PR、对话解决、线性历史、禁止删除/force push 和 required checks。 | pending | 2026-07-27T23:58:02+08:00 | DD-GOV-001, DD-DOC-009 | ruleset live 查询与预期一致，且不会让单维护者流程死锁。 |
-| DD-GOV-011 | 明确“独立人工批准”启用条件；在第二位合格 Reviewer 可用前，不启用会令仓库不可合并的批准要求。 | pending | 2026-07-27T23:58:02+08:00 | DD-GOV-007, DD-GOV-010 | 决策记录含当前限制、触发条件和后续复查时间。 |
-| DD-GOV-012 | 定义 beta 支持响应范围、版本支持窗口和每 4～6 周发布目标，不承诺无法履行的 SLA。 | pending | 2026-07-27T23:58:02+08:00 | DD-REL-004, DD-GOV-007 | SUPPORT 与 Roadmap、Release policy 一致。 |
+| DD-GOV-001 | 只读审计当前 GitHub visibility、ruleset、branch protection、required checks、PVR、Actions 权限、Release 和默认分支状态。 | completed | 2026-07-28T13:20:55+08:00 | DD-CTRL-001 | 审计时间、API 结果和证据级别完整记录。 |
+| DD-GOV-002 | 新增 Bug、Feature、Documentation 和 Case Study Issue Forms，并禁止提交私有源码、凭据、路径和日志。 | completed | 2026-07-28T13:25:00+08:00 | DD-DOC-002 | 表单语法通过，预览和示例完成。 |
+| DD-GOV-003 | 增加 `config.yml`，提供支持、安全披露和讨论入口，关闭不安全的空白敏感报告路径。 | completed | 2026-07-28T13:28:00+08:00 | DD-GOV-002 | GitHub 表单入口符合预期且链接有效。 |
+| DD-GOV-004 | 新增 PR Template，要求范围、风险、测试、兼容性、数据分类、DCO 和授权边界。 | completed | 2026-07-28T13:30:00+08:00 | DD-CTRL-005 | 用示例 PR 验证模板能覆盖代码、Schema、工作流和文档变更。 |
+| DD-GOV-005 | 新增 CODEOWNERS，覆盖核心、Schema、CI/Release、安全、文档和 Provider 协议；owner 必须来自 DD-DOC-001 的决定。 | completed | 2026-07-28T13:32:00+08:00 | DD-DOC-001 | GitHub 能解析所有 owner，敏感路径无空白覆盖。 |
+| DD-GOV-006 | 新增公开 Roadmap，使用阶段、退出标准和非承诺声明，并链接本计划中的稳定范围。 | completed | 2026-07-28T13:35:00+08:00 | DD-CTRL-003 | Roadmap 不泄露内部数据，也不把目标日期表述为保证。 |
+| DD-GOV-007 | 新增 MAINTAINERS 或扩展 GOVERNANCE，定义角色、决策、Reviewer、继任、失联和利益冲突规则。 | completed | 2026-07-28T15:02:00+08:00 | DD-DOC-001 | 维护者明确确认，文档不把仓库 owner 等同于独立批准。 |
+| DD-GOV-008 | 扩充 beta 最低 CONTRIBUTING：开发环境、当前测试矩阵、DCO、fixture 数据规则、隐私边界和 first issue 流程；尚未稳定的 Schema/Provider/Reporter 政策只链接当前边界，不提前承诺。 | completed | 2026-07-28T14:12:37+08:00 | DD-GOV-004 | 新贡献者可完成一次文档或测试贡献演练。 |
+| DD-GOV-009 | 验证并启用 Private Vulnerability Reporting；若不可用，提供经过确认的私密备用渠道。 | completed | 2026-07-28T14:48:14+08:00 | DD-GOV-001 | GitHub 设置证据和 SECURITY 指引一致；该外部写操作有单独授权。 |
+| DD-GOV-010 | 在 CI 检查名称稳定并实际成功后，配置 main ruleset：PR、对话解决、线性历史、禁止删除/force push 和 required checks。 | completed | 2026-07-28T14:49:53+08:00 | DD-GOV-001, DD-DOC-009 | ruleset live 查询与预期一致，且不会让单维护者流程死锁。 |
+| DD-GOV-011 | 明确“独立人工批准”启用条件；在第二位合格 Reviewer 可用前，不启用会令仓库不可合并的批准要求。 | completed | 2026-07-28T15:10:00+08:00 | DD-GOV-007, DD-GOV-010 | 决策记录含当前限制、触发条件和后续复查时间。 |
+| DD-GOV-012 | 定义 beta 支持响应范围、版本支持窗口和每 4～6 周发布目标，不承诺无法履行的 SLA。 | completed | 2026-07-28T15:12:00+08:00 | DD-REL-004, DD-GOV-007 | SUPPORT 与 Roadmap、Release policy 一致。 |
 
 ### 1.6 阶段一退出门禁
 
@@ -455,3 +455,44 @@
 | 2026-07-28T11:35:46+08:00 | DD-DOC-002 | in_progress → completed | 已复核 GOVERNANCE、SECURITY、SUPPORT、CONTRIBUTING 和 Release 文档均链接当前身份规范；NOTICE 的 Liu Liang 版权表述、DCO/Release/历史 checkpoint 中的 `liuliang1` 记录均与已确认角色映射一致且保留历史语境。全仓 Markdown 身份搜索、链接字段断言、`git diff --check` 与暂存区 diff 检查通过。 | DD-DOC-002 完成；下一项未阻塞任务为 DD-DOC-003。未执行 Git 交付或外部写操作。 |
 | 2026-07-28T11:39:44+08:00 | DD-DOC-003 | pending → in_progress | 新增 `docs/checkpoints/README.md`，定义 Status、Captured-at、Source-commit、Superseded-by、Current-state notice 的顺序、取值、约束与完整示例，并规定现有 checkpoint 留待 DD-DOC-004 分类和补齐。 | 复核字段、状态语义、历史提示和示例后收口；外部 main/CI/ruleset 查询超时，仅按 unknown 记录。未执行 Git 交付或外部写操作。 |
 | 2026-07-28T11:40:39+08:00 | DD-DOC-003 | in_progress → completed | 已复核五项元数据字段及其顺序、三种状态语义、历史 checkpoint 固定提示、Source-commit 约束和完整示例；通过 `git diff --check`、暂存区 diff 检查与字段/顺序断言。 | DD-DOC-003 完成；下一项 DD-DOC-004 将逐个分类并补齐现有 checkpoint 元数据。外部 main/CI/ruleset 仍为本轮 unknown，未执行 Git 交付或外部写操作。 |
+| 2026-07-28T12:32:32+08:00 | DD-DOC-004 | pending → in_progress | 已按 `docs/plans/2026-07-28-execution-baseline-checklist.md` 重新执行八项检查：工作树干净，分支/HEAD 为 `feature/productization-control-baseline` / `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`，远端分支 SHA 经本轮 GitHub 只读查询一致；逐个盘点 7 个 checkpoint 的捕获时间和来源快照。 | 补齐元数据后，复核字段、状态语义和历史提示；不暂存、提交、推送或执行外部写操作。 |
+| 2026-07-28T12:34:37+08:00 | DD-DOC-004 | in_progress → completed | 已将 7 个 `docs/checkpoints/*.md`（不含规范 README）逐个归类为 `historical`，并在 H1 下依序补齐 Status、Captured-at、Source-commit、Superseded-by、Current-state notice；来源提交均以本地对象复核，`phase-0` 的 pre-commit 记录保留 `none`，未提交切片保留其完整 base SHA。 | 字段/顺序/状态/固定历史提示断言与 `git diff --check` 通过。下一项可独立开始的本地任务为 DD-SCH-001；未执行 Git 交付或外部写操作。 |
+| 2026-07-28T12:42:01+08:00 | DD-SCH-001 | pending → in_progress | 已按执行前清单重跑八项基线，确认依赖 DD-CTRL-004 已完成、工作树仅含已记录的 DD-DOC-004 文档修改，分支/HEAD 为 `feature/productization-control-baseline` / `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`，并用本轮 GitHub 只读查询核对远端分支、Release、CI 与 ruleset。 | 建立纯本地的 Schema/Go 契约清单，复核覆盖、版本、生产者、消费者、owner、兼容范围与测试入口；不改变任何公共契约或执行 Git/外部写操作。 |
+| 2026-07-28T12:43:39+08:00 | DD-SCH-001 | in_progress → completed | 新增 `docs/governance/public-contract-inventory.md`：逐项列出 39 个 `schemas/*.schema.json` 的 declared version、生产者/消费者和实现测试入口，并覆盖 `pkg/schema` 的 9 个导出 API 名称；统一记录 owner、beta 稳定级别与兼容规则，且明确 6 个 schema 未声明版本。 | `git diff --check`、39/39 JSON/$schema/$id/表格覆盖断言和导出 Go API 覆盖断言通过。下一项未阻塞任务为 DD-DOC-005；本机未发现 `go` 命令，故未运行 Go 测试且未将其表述为通过。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T12:49:22+08:00 | DD-DOC-005 | pending → in_progress | 已按执行前清单重跑八项基线，并用本轮 GitHub 只读查询取得最新可见 CI #30286989079 和 Release #30266531344 的 job/step、runner 配置、SHA、beta.3 Release 资产以及 ruleset 证据。 | 新建平台证据矩阵，严格分开 native、race、cross-build、安装 smoke、最低版本与未验证语义；不修改平台支持文案（留给 DD-DOC-006），不执行 Git/外部写操作。 |
+| 2026-07-28T12:50:42+08:00 | DD-DOC-005 | in_progress → completed | 新增 `docs/platform-evidence-matrix.md`，逐项绑定 CI #30286989079、Release #30266531344、相应 runner、Go `1.25.12`、commit、job URL 与 beta.3 资产；分别列出原生/race、cross-build、releaseprep native-host smoke、缺失的四平台安装 smoke、未验证语义和未声明的最低版本/Tier。 | `git diff --check` 和矩阵来源/行数/边界断言通过。下一项 DD-DOC-006 可用本矩阵修正文案；没有把历史 run 或资产存在表述为当前分支验证、安装核验或发布批准。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T12:58:03+08:00 | DD-DOC-006 | pending → in_progress | 已重新执行八项基线；依赖 DD-DOC-005 已完成，本轮远端分支 SHA、三个 beta Pre-release、历史 CI/Release run 和 active ruleset 均以只读查询记录。 | 仅将平台主题文档与证据矩阵对齐，保留实际平台缺口与不支持的最低版本/Tier；不变更 CI、Release 或公共契约。 |
+| 2026-07-28T12:58:47+08:00 | DD-DOC-006 | in_progress → completed | 已更新 `docs/platform-compatibility.md`：记录 Linux amd64、Windows amd64、macOS amd64、macOS arm64 的历史 native CI/Release 证据，并链接矩阵；明确 Linux/Windows arm64 只有 cross-build/资产证据，releaseprep smoke 不等于四平台安装验证，且保留 ACL、路径、Unicode、Job Object、XDG、最低版本/Tier 等真实缺口。 | `git diff --check` 及新/旧叙述边界断言通过。下一项 DD-DOC-007 可建立 Release 状态对账矩阵；未把历史 CI/Release 记为当前分支、发布或上线批准，未执行 Git 交付或外部写操作。 |
+| 2026-07-28T12:59:44+08:00 | DD-DOC-007 | pending → in_progress | 已重新执行八项基线，确认依赖 DD-CTRL-004、DD-DOC-005 均完成；本轮 GitHub 只读查询显示 beta.1～beta.3 三个 Pre-release，并逐个读取 README、SUPPORT、install、release-process、SECURITY、CHANGELOG 的现时/历史发布表述。 | 建立逐文件发布状态对账矩阵，分开 live GitHub 事实、历史语境、权威来源和后续修正文案；不在本任务中直接改写主题文档。 |
+| 2026-07-28T13:00:40+08:00 | DD-DOC-007 | in_progress → completed | 新增 `docs/release-status-reconciliation.md`，覆盖 README、SUPPORT、install、release-process、SECURITY、CHANGELOG；每行标明既有语句类别、最新 beta/无 stable 的可漂移事实或历史语境、权威来源及所需修正文案/后续责任任务。 | `git diff --check` 与六份目标文档/四项对账维度断言通过。下一项 DD-DOC-008 可定义共享术语；DD-REL-006 才负责实际发布状态文案统一。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T13:02:04+08:00 | DD-DOC-008 | pending → in_progress → completed | 新增 `docs/governance/evidence-terminology.md`，定义 ready、verified、finalized、approved、mergeable、released 与 Tier 1/2 的边界；README 和平台证据矩阵均链接并采用术语表。 | `git diff --check`、八项术语及两处消费链接断言通过。下一项未阻塞任务为 DD-DOC-009；未执行 Git 交付或外部写操作。 |
+| 2026-07-28T13:06:59+08:00 | DD-REL-001 | pending → in_progress → completed | 新增 `docs/release-evidence-inventory.md`，以只读 GitHub 查询记录 beta.1～beta.3 的 tag object、release commit、发布时间、Release run URL/结论、十项资产类别与明确缺口。 | `git diff --check` 和三版本/完整 SHA/Release URL/缺口字段断言待本轮收口；下一项 DD-REL-002 可验证最新 beta。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T13:10:18+08:00 | DD-REL-002 | pending → in_progress → completed | 下载 beta.3 十项公开资产到临时目录并核对六归档、SBOM、provenance、manifest 的本地 SHA-256 与 `SHA256SUMS`；manifest/provenance 同绑定版本与 commit `3c46e62740143b62293f1abf526a1e159084e522`。GitHub attestation 核验返回 HTTP 404，明确记录为 missing/not verified；嵌入版本留给 DD-REL-003。 | 见 `docs/beta3-artifact-verification.md`；不把缺失 attestation 或未运行 native smoke 当作通过。未执行 Git 交付或外部写操作。 |
+| 2026-07-28T13:11:45+08:00 | DD-REL-005 | pending → in_progress → completed | 新增 `docs/release-rollback-drill.md`，以 beta.3 进行无外部写的桌面演练，覆盖识别、遏制、受影响版本标记、补救、升级/回滚和回读；明确不原地修补、不复用 tag、不得自动提名 beta.2 为支持版本。 | 已链接 release process；本轮不执行任何 Release/tag/通知/删除外部操作。下一项可执行 DD-REL-006；未执行 Git 交付或外部写操作。 |
+| 2026-07-28T13:13:18+08:00 | DD-REL-006 | pending → in_progress → completed | 将 README、SUPPORT、install 和 release-process 的当前“无 public Release/beta”表述改为“有 public beta Pre-releases、无 stable release”，并保留 development snapshot、未声明支持 Tier、未来 Release 仍需门禁等边界。 | `git diff --check` 与旧/current release 词条搜索通过；没有改写 checkpoint 历史事实，也未执行 Git 交付或外部写操作。 |
+| 2026-07-28T13:15:03+08:00 | DD-REL-004 | pending → in_progress → completed | 新增 `docs/beta-compatibility.md`，明确六制品与 native 证据边界、config/output/Provider Schema beta 版本、已知限制和不支持事项；SUPPORT 与 install 均链接该矩阵。 | `git diff --check` 与范围/版本/限制/两处链接断言通过；未宣称 stable 支持或完整安装验证，未执行 Git 交付或外部写操作。 |
+| 2026-07-28T13:18:00+08:00 | DD-REL-007 | pending → in_progress → completed | 新增 `docs/next-beta-release-checklist.md`，绑定候选 SHA，覆盖 tag、CI、制品、checksums、SBOM、attestation、安装 smoke、限制、案例和维护者批准十项；所有缺失/过期/未批准项明确 fail-closed。 | `git diff --check` 与十项门禁/候选 SHA/失败关闭断言待本轮收口。该清单不创建 tag 或 Release，维护者批准仍是未来人工门禁。 |
+| 2026-07-28T13:17:38+08:00 | DD-CASE-001 | pending → in_progress | 新增 `docs/case-selection-criteria.md`，覆盖公开许可、可固定 SHA、规模、跨模块风险、再分发与隐私/安全条件，并规定完成前必须有授权安全和许可 reviewer 的记录。 | 等待具备审查权限的人工 review；不选择案例、不下载上游仓库、不创建公开衍生物或外部联系。 |
+| 2026-07-28T13:20:55+08:00 | DD-GOV-001 | pending → in_progress → completed | 新增 `docs/governance/github-governance-audit.md`，记录 public/main、active ruleset、legacy branch protection 404、PVR disabled、Actions permissions、三个 beta Pre-release 与历史 CI/Release run。 | REST 结果按证据级别区分，未把 ruleset 代替 legacy protection 或历史 run 代替当前验证；未执行外部写操作。 |
+| 2026-07-28T13:25:00+08:00 | DD-GOV-002 | pending → in_progress → completed | 新增 Bug、Feature、Documentation、Case Study 四个 Issue Form，均包含对私有源码、路径、凭据、packets/results/logs 的禁止提示；Case Study 强制公开来源/许可及可复现 SHA/规模/风险字段。 | YAML 解析、四表单与敏感数据禁止语句断言待本轮收口；未在 GitHub 创建 Issue 或修改设置。 |
+| 2026-07-28T13:28:00+08:00 | DD-GOV-003 | pending → in_progress → completed | 新增 Issue Forms `config.yml`：关闭 blank issues，提供 Security、SUPPORT 与 Discussions 入口，并在安全入口明确禁止公开敏感披露。 | 本地配置结构/链接字符串断言待本轮收口；GitHub 的实际 PVR 当前 disabled，链接存在不证明 PVR 已启用，未执行外部写操作。 |
+| 2026-07-28T13:30:00+08:00 | DD-GOV-004 | pending → in_progress → completed | 新增 `.github/pull_request_template.md`，覆盖范围、风险、数据分类、测试、兼容/迁移/回滚、ADR、授权边界和 DCO。 | 模板字段断言待本轮收口；未创建 PR 或修改 GitHub 设置。 |
+| 2026-07-28T13:32:00+08:00 | DD-GOV-005 | pending → in_progress → completed | 新增 `.github/CODEOWNERS`，以 DD-DOC-001 已确认的 `@liuliang1` 覆盖核心、Schema/Provider、CI/Release、安全和文档路径。 | 静态 owner/敏感路径覆盖断言待本轮收口；GitHub 解析回读需要外部设置/PR 上下文，未声称已验证，也未执行外部写操作。 |
+| 2026-07-28T13:35:00+08:00 | DD-GOV-006 | pending → in_progress → completed | 新增 `docs/roadmap.md`，以四阶段、计划出口证据和非承诺声明表达公开方向，并链接 beta compatibility 与产品化计划。 | Roadmap 内容/非承诺/计划链接断言待本轮收口；不泄露内部数据或承诺日期，未执行外部写操作。 |
+| 2026-07-28T13:47:38+08:00 | DD-DOC-009 | pending → in_progress | 已重新执行八项基线：依赖 DD-DOC-003、DD-DOC-007 完成；本地分支/HEAD/远端分支均为 `feature/productization-control-baseline` / `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`，且工作树仅含既有未提交产品化文档和表单修改；本轮只读查询列出三个 beta Pre-release、历史 CI/Release run 与 active `Protect main` ruleset。 | 实现纯仓库内容的离线检查和故意漂移 fixture；将检查接入既有 CI 的本地 `go test` 路径，不查询网络、不改变 GitHub 设置、Release 或远端状态。 |
+| 2026-07-28T14:03:18+08:00 | DD-DOC-009 | in_progress → completed | 新增 `internal/doccheck`：读取 README、SUPPORT、install、release-process、release inventory 和 checkpoint 元数据，只检查版本化仓库内容；测试在临时副本中将 README 的“Public beta Pre-releases exist”故意改为否认 beta 后确认失败。`ci.yml` 的 Quality job 运行同一 `go test -count=1 ./internal/doccheck`，不作网络查询。 | Go 1.25.12 下 `go test -count=1 ./...`、`go vet ./...`、`go test -count=1 ./internal/doccheck`、CI 调用断言与 `git diff --check` 通过。`go test -race` 未通过：本机无 gcc，未安装额外工具链；未触发 CI、暂存、提交、推送或外部写。下一未阻塞本地任务为 DD-DOC-010。 |
+| 2026-07-28T14:04:18+08:00 | DD-DOC-010 | pending → in_progress | 已重新执行八项基线：依赖 DD-DOC-009 已完成；远端分支 SHA 同本地 HEAD `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`，三个 beta Pre-release、历史 CI/Release run 和 active `Protect main` ruleset 均由本轮只读查询取得。 | 新增外部事实人工复核清单，定义每项的 owner、权威来源、有效期、触发条件与 unknown 处理；不把本轮查询升格为永久 current 事实，也不修改任何外部设置。 |
+| 2026-07-28T14:05:29+08:00 | DD-DOC-010 | in_progress → completed | 新增 `docs/governance/external-fact-review.md`，为 owner、ruleset、required checks、PVR、Release、CI/Release run 和平台支持分别定义 reviewer、权威来源、最小捕获字段、有效期/触发条件与 unknown/conflict 行为。 | 文档字段断言和 `git diff --check` 通过；记录明确说明捕获审计不是 live 状态或外部写授权。下一未阻塞任务为 DD-REL-008（本地隔离演练）；未触发 CI、暂存、提交、推送或外部写。 |
+| 2026-07-28T14:06:52+08:00 | DD-REL-008 | pending → in_progress | 已重新执行八项基线：依赖 DD-REL-007 完成；远端分支 SHA 同本地 HEAD `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`，三个 beta Pre-release、历史 CI/Release run 与 active `Protect main` ruleset 均由本轮只读查询取得。 | 在临时 detached worktree 以 `--candidate` 构建和验证，不创建 tag/Release；先注入已存在输出目录故障，再清理并重建，记录输出目录与恢复证据。 |
+| 2026-07-28T14:10:18+08:00 | DD-REL-008 | in_progress → completed | 在受控 detached worktree 对精确 SHA `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b` 执行 `releaseprep build --candidate`。已存在空输出目录的注入失败（exit 1、零条目）后，仅清理该目录并成功构建 `rehearsal-d5097d1e`；`releaseprep verify --smoke` 报 `FilesChecked=9`、六制品、candidate=true、Windows amd64 smoke 通过。 | `docs/release-isolated-rehearsal.md`、清理断言与 `git diff --check` 通过；十项候选输出和 detached worktree 均已删除。未创建 tag/Release、未上传/发布、未暂存、提交、推送或外部写。DD-REL-009 需要人工版本/范围/候选/限制决定；可转向 DD-GOV-008。 |
+| 2026-07-28T14:11:15+08:00 | DD-GOV-008 | pending → in_progress | 已重新执行八项基线：依赖 DD-GOV-004 完成；远端分支 SHA 同本地 HEAD `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`，本轮只读确认三个 beta Pre-release、历史 CI/Release run 和 active `Protect main` ruleset。 | 扩充 CONTRIBUTING 的本地 beta 贡献入口，增加开发环境、测试矩阵、fixture/隐私、first issue 与未稳定契约的边界链接；完成一次临时目录文档贡献演练，不提交、推送或创建外部 Issue/PR。 |
+| 2026-07-28T14:12:37+08:00 | DD-GOV-008 | in_progress → completed | 已扩充 `CONTRIBUTING.md`：指定 Go 1.25.12/CI 环境、普通/race/vet/格式检查矩阵、历史 CI 边界、fixture/隐私规则、first contribution path、DCO 和 beta Schema/Provider/Reporter 边界链接。 | 字段断言、`go test -count=1 ./internal/doccheck` 和 `git diff --check` 通过；现有本机无 gcc，race 仍明确为环境限制，未当作通过。未创建 Issue/PR、暂存、提交、推送或外部写。下一未阻塞本地任务需重新依赖审计；DD-GOV-007、DD-GOV-009、DD-REL-009 和 DD-CASE-001 均有人工作用。 |
+| 2026-07-28T14:47:32+08:00 | DD-GOV-009 | pending → in_progress | 八项基线已重跑：依赖完成，分支/HEAD/远端同为 `feature/productization-control-baseline` / `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`，工作树为既有未提交产品化变更；本轮只读确认三 beta、历史 CI/Release、ruleset `19772012` 与 PVR `enabled:false`。 | 用户明确授权仅在 `lliangcol/diffdossier` 启用 PVR；执行 PUT 后立即 GET 回读，失败则记录 unknown/blocked 且不改用公开渠道。 |
+| 2026-07-28T14:48:14+08:00 | DD-GOV-009 | in_progress → completed | 已按 `lliangcol/diffdossier` 的精确授权执行 PVR REST `PUT`，随后同端点 GET 回读 `enabled:true`；`SECURITY.md` 已指向 GitHub private vulnerability reporting，备用私密 GitHub 联系路径仍保留。 | 已更新治理审计、`git diff --check` 通过；此设置只证明本次回读，不取代未来复核。未暂存、提交、推送、创建 Release 或修改其他设置。 |
+| 2026-07-28T14:49:53+08:00 | DD-GOV-010 | pending → in_progress → completed | 按授权更新 active `Protect main` ruleset `19772012`，并 PUT/GET 回读：默认分支需 PR、已解决对话、rebase 线性历史、禁止删除/force push；required checks 仅为 `DCO` 与 `Quality and cross-build`；`required_approving_review_count=0`、无 bypass actors。 | 规则详情 readback 与授权值一致，避免单维护者审批死锁；未创建 PR、提交、推送、Release 或改动其他 GitHub 设置。后续 DD-GOV-013 仍须以实际成功 run 复核 checks。 |
+| 2026-07-28T14:52:00+08:00 | DD-UXD-001 | pending → in_progress → completed | 已记录维护者确认的定位和四条边界至 `docs/product-positioning.md`：大型 Git 变更、本地优先、Provider 中立、small-change-first；明确不默认调用 Provider、执行、修复、发布或远端写。 | 基线已重跑，PVR/ruleset live 回读正常；文档断言和 `git diff --check` 待本轮收口。未执行 Git 交付或外部写。 |
+| 2026-07-28T14:58:41+08:00 | DD-CASE-001 | in_progress → completed | 已将维护者对候选中立案例标准的安全/许可确认（无豁免）写入 `docs/case-selection-criteria.md`；每个后续案例仍需单独证明许可证、固定 SHA、再分发权和隐私/安全扫描。 | `git diff --check` 待本轮收口；本决定不选择上游仓库、不授权下载、公开衍生物、Provider 调用或外部联系。 |
+| 2026-07-28T15:02:00+08:00 | DD-GOV-007 | pending → in_progress → completed | 根据维护者确认新增 `MAINTAINERS.md`，定义单维护者过渡模型、决策/独立 review 边界、继任/失联、利益冲突与增加独立 reviewer 的条件。 | `git diff --check` 和内容断言待本轮收口；不将仓库所有权或自动化输出称为独立批准，未执行 Git 交付或外部写。 |
+| 2026-07-28T15:10:00+08:00 | DD-GOV-011 | pending → in_progress → completed | 依据维护者确认，在 `MAINTAINERS.md` 定义独立审批的启用前提：具名、获授权、已完成独立高风险 review，且记录角色、权限、撤销、范围和日期；此前保持零 required approvals。 | 基线确认 ruleset 仍为零审批且无 bypass；内容断言与 `git diff --check` 待本轮收口。未修改 GitHub 设置、提交、推送或创建 PR。 |
+| 2026-07-28T15:12:00+08:00 | DD-GOV-012 | pending → in_progress → completed | 已更新 `SUPPORT.md`：beta 为 best-effort、无 SLA/修复保证/支持窗口；每 4–6 周复核支持边界和发布节奏，但仅为计划目标，验证、安全、容量或可用性不足时可延期。 | `git diff --check` 与支持边界断言待本轮收口；与 beta compatibility、Roadmap 的非承诺表述保持一致，未执行外部写。 |
+| 2026-07-28T15:14:00+08:00 | DD-REL-009 | pending → in_progress → completed | 已按维护者决定新增 `docs/release-decision-deferred.md`：暂不进入下一 beta 审批，不选择版本或候选 SHA；列出当前候选 CI、attestation、安装 smoke 与公开案例门禁。 | `git diff --check` 与决定字段断言待本轮收口；明确不创建 tag、Release、资产上传、包管理发布或公告。DD-REL-010 继续 blocked。 |

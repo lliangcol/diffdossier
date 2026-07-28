@@ -1,11 +1,12 @@
 # Install and verify
 
-No public DiffDossier release exists yet. Do not install Phase 7 candidate
-artifacts as if they were supported releases.
+Public beta Pre-releases exist. Do not treat beta artifacts or Phase 7
+candidate artifacts as supported stable releases.
+See [beta compatibility](beta-compatibility.md) before selecting an archive.
 
-When an authorized release exists, download the archive for the exact operating
-system and architecture together with `SHA256SUMS`. Verify the archive before
-extracting it:
+For a selected public beta or a future authorized release, download the archive
+for the exact operating system and architecture together with `SHA256SUMS`.
+Verify the archive before extracting it:
 
 ```text
 # Linux

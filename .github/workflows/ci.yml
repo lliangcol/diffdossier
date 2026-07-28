@@ -74,6 +74,8 @@ jobs:
           fi
       - name: Vet
         run: go vet ./...
+      - name: Validate offline documentation consistency
+        run: go test -count=1 ./internal/doccheck
       - name: Validate published schemas
         run: go test -count=1 ./pkg/schema
       - name: Cross-build supported targets

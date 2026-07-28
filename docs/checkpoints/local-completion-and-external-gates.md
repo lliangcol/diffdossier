@@ -1,4 +1,9 @@
 # Local implementation completion and external gates
+- Status: historical
+- Captured-at: 2026-07-27T01:19:10+08:00
+- Source-commit: uncommitted at 98856de56e6543b4806d899c611a2744f76686c0
+- Superseded-by: none
+- Current-state notice: Historical checkpoint — do not treat this document as current project status. Revalidate local completion, external gates, Release, CI, and ruleset claims from their current evidence records.
 
 - Date: 2026-07-27
 - Pushed base commit: `98856de56e6543b4806d899c611a2744f76686c0`

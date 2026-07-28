@@ -1,4 +1,9 @@
 # Phase 6 security, platform, and reliability checkpoint
+- Status: historical
+- Captured-at: 2026-07-26T21:16:31+08:00
+- Source-commit: 8b2ed3c7445bee0279d6c7882f1785833aebbc0b
+- Superseded-by: none
+- Current-state notice: Historical checkpoint — do not treat this document as current project status. Revalidate security, platform, benchmark, CI, and Release claims from their current evidence records.
 
 - Date: 2026-07-26
 - Native host: macOS/amd64

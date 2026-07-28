@@ -1,4 +1,9 @@
 # Phase 7 local release-preparation checkpoint
+- Status: historical
+- Captured-at: 2026-07-26T21:48:20+08:00
+- Source-commit: f2ae86965f2dc044669594ccd71fa95f27e35163
+- Superseded-by: none
+- Current-state notice: Historical checkpoint — do not treat this document as current project status. Revalidate Release, artifact, toolchain, platform, CI, and ruleset claims from their current evidence records.
 
 - Date: 2026-07-26
 - Status: local release engineering implemented; public release blocked

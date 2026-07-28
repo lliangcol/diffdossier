@@ -1,4 +1,9 @@
 # Phase 5 workflow, Gate, and reporting checkpoint
+- Status: historical
+- Captured-at: 2026-07-26T20:40:43+08:00
+- Source-commit: 8bee8ea2e4af561d5641708a4abd0b3610080ac6
+- Superseded-by: none
+- Current-state notice: Historical checkpoint — do not treat this document as current project status. Revalidate Gate authorization, public-bundle, CI, and platform claims from their current evidence records.
 
 - Date: 2026-07-26
 - Scope: T5.1 through T5.5 core implementation

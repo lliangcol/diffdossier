@@ -1,7 +1,8 @@
 # Release process
 
-DiffDossier has no public release yet. This document defines the evidence that
-must exist before a maintainer creates one. On 2026-07-27, maintainer Liu Liang
+DiffDossier has public beta Pre-releases but no stable release. This document
+defines the evidence that must exist before a maintainer creates a future
+release. On 2026-07-27, maintainer Liu Liang
 (`liuliang1`; GitHub repository owner account `lliangcol`) explicitly authorized
 the pinned CI and release workflows, the main ruleset described below, Provider
 compatibility smoke, ONM migration, the `v0.1.0-beta.1` tag, attestation, and
@@ -88,3 +89,6 @@ gate.
 Rollback keeps the previous supported binary, checksum, and compatible config
 available. A release is never repaired in place: revoke or mark it affected,
 create a new commit and version, rerun all evidence, and publish a new release.
+The executable historical-beta drill, including the rule against tag reuse and
+the separate authorization boundary for affected-version notices, is in
+[`release-rollback-drill.md`](release-rollback-drill.md).

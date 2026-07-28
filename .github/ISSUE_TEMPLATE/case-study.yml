@@ -1,0 +1,16 @@
+name: Case study proposal
+description: Propose only a public, licensed, reproducible case candidate.
+title: "case: "
+labels: [case-study]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include private source, repository paths, credentials, packets, results, logs, or unapproved derivatives."
+  - type: input
+    id: source
+    attributes: {label: Public source URL and license}
+    validations: {required: true}
+  - type: textarea
+    id: reproducibility
+    attributes: {label: Base/head SHA, scale, and cross-module risk}
+    validations: {required: true}

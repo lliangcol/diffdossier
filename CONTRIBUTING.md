@@ -22,13 +22,26 @@ name and email they are authorized to publish.
 
 ## Development
 
-Use a supported Go toolchain and run:
+Use Go `1.25.12`, the toolchain used by the repository workflows. The project
+uses no third-party Go modules; keep `GOWORK=off`, `GOTOOLCHAIN=local`, and
+`GOFLAGS=-mod=readonly` when reproducing CI locally. On a host with an existing
+C compiler, also run the race command; if that compiler is unavailable, record
+the race result as an environment limitation rather than a pass.
+
+Run the current local test matrix:
 
     gofmt -w <changed-go-files>
     go test ./...
     go test -race ./...
     go vet ./...
     git diff --check
+
+The CI `Quality and cross-build` job checks formatting, vet, offline document
+consistency, published schemas and six cross-build targets. The native jobs
+run ordinary tests on Linux amd64, Windows amd64, macOS amd64 and macOS arm64;
+their historical success is not current-branch evidence or a support-tier
+promise. See [`docs/platform-evidence-matrix.md`](docs/platform-evidence-matrix.md)
+for the exact boundary.
 
 Do not add third-party dependencies, change stable CLI or Schema contracts, or
 enable network, command execution, source mutation, CI/CD, or release behavior
@@ -42,4 +55,26 @@ approval required for any external or sensitive action.
 
 Fixtures in this public repository must be synthetic or approved public-project
 data. Never contribute credentials, private source, packets, results, logs, or
-reports.
+reports. Public issue forms are not a safe channel for security disclosures;
+follow [`SECURITY.md`](SECURITY.md) and do not include sensitive data in a
+public Issue, pull request, or Discussion.
+
+## First contribution path
+
+1. Start with a documentation or focused test-only change. Read the relevant
+   contract/compatibility document before changing CLI, Schema, Provider or
+   Reporter behavior.
+2. Use the Issue Forms for synthetic or already-public information only, then
+   explain scope, data classification, validation and authorization boundary in
+   the PR template.
+3. Make the smallest change, run the matrix above, and include exact results
+   plus any unavailable checks in the PR. Do not create an external Issue or PR
+   as part of a local rehearsal.
+4. Add an authorized `Signed-off-by` trailer to each contribution commit when
+   it is ready for a maintainer to review.
+
+The current beta boundaries for config, JSON output, Provider protocol and
+published schemas are in [`docs/beta-compatibility.md`](docs/beta-compatibility.md)
+and [`docs/governance/public-contract-inventory.md`](docs/governance/public-contract-inventory.md).
+They are inventories, not stable compatibility guarantees. Changes to these
+areas still require the ADR and maintainer-review rules above.

@@ -1,0 +1,24 @@
+# Canonical maintainer handle confirmed by DD-DOC-001.
+* @liuliang1
+
+# Core CLI and workflow engine
+/cmd/ @liuliang1
+/internal/ @liuliang1
+/pkg/ @liuliang1
+
+# Public contracts and Provider protocol
+/schemas/ @liuliang1
+/docs/governance/public-contract-inventory.md @liuliang1
+/docs/providers-and-results.md @liuliang1
+/docs/integrations/ @liuliang1
+
+# CI, release, and security-sensitive paths
+/.github/ @liuliang1
+/docs/release-process.md @liuliang1
+/docs/next-beta-release-checklist.md @liuliang1
+/SECURITY.md @liuliang1
+
+# Documentation
+/README.md @liuliang1
+/SUPPORT.md @liuliang1
+/docs/ @liuliang1

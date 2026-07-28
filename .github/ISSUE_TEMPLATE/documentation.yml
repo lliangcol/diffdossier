@@ -1,0 +1,16 @@
+name: Documentation improvement
+description: Report an inaccurate, missing, or unclear documentation topic.
+title: "docs: "
+labels: [documentation]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include private source, repository paths, credentials, packets, results, or logs."
+  - type: input
+    id: location
+    attributes: {label: Public documentation location}
+    validations: {required: true}
+  - type: textarea
+    id: improvement
+    attributes: {label: Suggested correction}
+    validations: {required: true}

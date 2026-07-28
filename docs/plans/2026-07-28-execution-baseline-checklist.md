@@ -180,3 +180,154 @@ A-02 的未验证资产边界，并将其余未关闭结论映射到原子任务
 
 结论：`ready`（仅限 DD-DOC-003 的本地文档实现）。外部 main/CI/ruleset 事实为
 `unknown`，但不影响本地规范的定义；后续工作包必须重新查询。
+
+### 2026-07-28T12:32:32+08:00 — DD-DOC-004 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-DOC-004`，唯一依赖 `DD-DOC-003` 已完成；验收要求为逐个分类全部 checkpoint、补齐元数据，且不把历史内容当作当前事实。允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已复核 CONTRIBUTING、GOVERNANCE、ADR 规则、本计划、状态/证据约定、checkpoint 规范与 CI/Release 工作流；保持范围聚焦，历史记录不得改写为当前事实，外部写和 Git 交付仍需明确授权。 |
+| 3 | 工作树干净（无已暂存、未暂存或未跟踪文件）；分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 4 | 上游为 `origin/feature/productization-control-baseline`；相对本地跟踪引用 ahead/behind 为 `0/0`（跟踪引用本身可能过期）。本轮 GitHub API 只读查询远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`，查询时间为本记录时间。 |
+| 5 | 本轮 GitHub CLI 只读查询列出 `v0.1.0-beta.3`、`v0.1.0-beta.2`、`v0.1.0-beta.1` 三个 Pre-release；未由列表推断资产、哈希或 attestation 已验证。 |
+| 6 | 相关工作流为 `CI` 与 `Release`。本轮可见最新 CI #30286989079（success，main，历史 SHA）和 Release #30266531344（success，`v0.1.0-beta.3`，历史 SHA）；均非当前分支 HEAD 的验证。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。本任务无 GitHub 设置、Release、Provider、公开数据或 Git 交付授权。 |
+| 8 | 本轮只允许修改 7 个现有 checkpoint 的元数据、计划状态/执行日志及本清单记录；验证元数据字段、历史提示、来源 SHA 与 Markdown/diff。明确排除产品实现、工作流、外部状态、`git add`、commit 和 push。 |
+
+结论：`ready`（仅限 DD-DOC-004 的本地文档分类和元数据补齐）。
+
+### 2026-07-28T12:42:01+08:00 — DD-SCH-001 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-SCH-001`，依赖 `DD-CTRL-004` 已完成，且属于阶段零公共契约基线；验收要求为每项 Schema 具备 owner、兼容范围和测试入口。允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已复核 CONTRIBUTING、GOVERNANCE、ADR 规则、计划、状态/证据约定和 CI/Release 工作流；本轮仅盘点既有契约，不改变 public contract，因此无需新增 ADR。 |
+| 3 | 分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。暂存区和未跟踪区为空；未暂存区有 9 个 DD-DOC-004 预期文档修改，未发生 Git 交付。 |
+| 4 | 上游为 `origin/feature/productization-control-baseline`，相对本地跟踪引用 ahead/behind 为 `0/0`。本轮 GitHub API 只读查询的远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 5 | 本轮 GitHub CLI 只读查询列出 `v0.1.0-beta.3`、`v0.1.0-beta.2`、`v0.1.0-beta.1` 三个 Pre-release；不将其视为 Schema 或安装验证。 |
+| 6 | 相关工作流为 `CI` 与 `Release`。本轮可见最新 CI #30286989079 与 Release #30266531344 均为历史运行，不作为当前分支 Schema 验证。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。没有 GitHub 设置、Release、Provider、公开数据或 Git 交付授权。 |
+| 8 | 本轮范围是新增契约清单及任务/基线记录；检查 `schemas/*.schema.json`、`pkg/schema`、生产/读取路径和测试入口。明确排除 Schema、Go 类型、CLI、Provider、工作流和外部状态变更。 |
+
+结论：`ready`（仅限 DD-SCH-001 的本地契约盘点）。
+
+### 2026-07-28T12:49:22+08:00 — DD-DOC-005 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-DOC-005`，依赖 `DD-CTRL-001` 已完成；验收要求是可回溯到 run、runner、版本、commit 的平台证据矩阵。允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已复核 CONTRIBUTING、GOVERNANCE、ADR 规则、本计划、状态/证据约定、现有平台文档和 CI/Release 工作流；本轮仅记录既有证据，不改变平台承诺或工作流，故无需 ADR。 |
+| 3 | 分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。暂存区为空；未暂存区有 9 个既有文档修改，另有 DD-SCH-001 清单未跟踪；未发生 Git 交付。 |
+| 4 | 上游为 `origin/feature/productization-control-baseline`，相对本地跟踪引用 ahead/behind 为 `0/0`。本轮 GitHub API 只读查询的远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 5 | 本轮 GitHub CLI 只读查询列出三个 Pre-release；最新 `v0.1.0-beta.3` 发布于 2026-07-27T12:39:48Z，包含六平台归档、`SHA256SUMS`、SBOM、provenance 和 release manifest。资产存在不等于本轮下载/哈希/attestation 核验。 |
+| 6 | 相关工作流为 `CI` 与 `Release`。本轮取得 CI #30286989079（success，`aa611755554711dd44fab388f488fd2867ed093e`）和 Release #30266531344（success，`3c46e62740143b62293f1abf526a1e159084e522`）的 job/step 详情；二者均为历史 SHA，不作为当前分支验证。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。没有 GitHub 设置、Release、Provider、公开数据或 Git 交付授权。 |
+| 8 | 本轮只允许新增平台证据矩阵及更新任务/基线记录；明确分开支持 Tier、原生运行、race、cross-build、安装 smoke、最低版本与未验证语义。排除当前平台文案修正、发布、下载制品、安装或外部写。 |
+
+结论：`ready`（仅限 DD-DOC-005 的本地证据矩阵）。
+
+### 2026-07-28T12:58:03+08:00 — DD-DOC-006 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-DOC-006`，依赖 DD-DOC-005 已完成；验收要求为平台主题文档与当前矩阵一致，且不把 cross-build 提升为 native 证据。允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已复核 CONTRIBUTING、GOVERNANCE、ADR 规则、本计划、状态/证据约定、平台矩阵和 CI/Release 工作流；只修正文案，不改变平台承诺、工作流或契约。 |
+| 3 | 分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。暂存区为空；未暂存区有 9 个既有文档修改，另有 2 个既有未跟踪文档；未发生 Git 交付。 |
+| 4 | 上游为 `origin/feature/productization-control-baseline`，相对本地跟踪引用 ahead/behind 为 `0/0`。本轮 GitHub API 只读查询的远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 5 | 本轮 GitHub CLI 只读查询仍列出三个 Pre-release；未将其作为安装或当前分支验证。 |
+| 6 | 相关工作流为 `CI` 与 `Release`。最新可见 CI #30286989079 与 Release #30266531344 为历史 SHA 的成功 run；其细节已在 DD-DOC-005 矩阵中区分。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。没有 GitHub 设置、Release、Provider、公开数据或 Git 交付授权。 |
+| 8 | 本轮只更新 `docs/platform-compatibility.md`、任务/基线记录并按风险复核 Markdown 与差异；排除任何代码、CI、Release、安装或外部写操作。 |
+
+结论：`ready`（仅限 DD-DOC-006 的本地文档修正）。
+
+### 2026-07-28T12:59:44+08:00 — DD-DOC-007 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-DOC-007`，依赖 DD-CTRL-004 与 DD-DOC-005 均完成；验收要求是覆盖指定文档、区分已有 beta/未有 stable 与历史状态的对账矩阵。允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已复核 CONTRIBUTING、GOVERNANCE、ADR 规则、本计划、状态/证据约定、Release 流程、平台矩阵和六份目标文档；本轮仅盘点/提出修正文案，不改变发布、支持或安全契约。 |
+| 3 | 分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。暂存区为空；未暂存区有 10 个既有文档修改，另有 2 个既有未跟踪文档；未发生 Git 交付。 |
+| 4 | 上游为 `origin/feature/productization-control-baseline`，相对本地跟踪引用 ahead/behind 为 `0/0`。本轮 GitHub API 只读查询的远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 5 | 本轮 GitHub CLI 只读查询列出三个 Pre-release：`v0.1.0-beta.1`、`.2`、`.3`；最新 beta.3 发布于 2026-07-27T12:39:48Z。没有 stable release 的结论仅限这次查询时点。 |
+| 6 | 相关工作流为 `CI` 与 `Release`。最新可见 CI #30286989079 与 Release #30266531344 为历史 SHA 的成功 run，不能替代当前分支验证。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。没有 GitHub 设置、Release、Provider、公开数据或 Git 交付授权。 |
+| 8 | 本轮只新增发布状态对账矩阵及任务/基线记录；覆盖 README、SUPPORT、install、release-process、SECURITY、CHANGELOG，逐项标注事实、历史语境、来源和修正建议。排除直接文案修正、Release 或外部写操作。 |
+
+结论：`ready`（仅限 DD-DOC-007 的本地对账矩阵）。
+
+### 2026-07-28T13:02:04+08:00 — DD-DOC-008 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | DD-DOC-008 依赖 DD-CTRL-005 已完成，允许开始。 |
+| 2 | 已复核 CONTRIBUTING、GOVERNANCE、ADR 规则；仅定义文档术语，不改变契约。 |
+| 3 | 分支 `feature/productization-control-baseline`，HEAD `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`；工作树含此前未提交文档变更。 |
+| 4 | 相对 `origin/feature/productization-control-baseline` ahead/behind 为 `0/0`；本轮 GitHub API 只读核对远端同 SHA。 |
+| 5 | 只读查询仍列出三个 beta Pre-release；未当作发布批准。 |
+| 6 | 可见 CI #30286989079 与 Release #30266531344 均为历史 SHA。 |
+| 7 | active `Protect main` ruleset（ID `19772012`）；无外部写授权。 |
+| 8 | 范围限于术语表、README、平台矩阵及计划记录；不改代码、CI、Release 或外部状态。 |
+
+结论：`ready`（仅限 DD-DOC-008 的本地术语统一）。
+
+### 2026-07-28T13:47:38+08:00 — DD-DOC-009 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-DOC-009`，依赖 `DD-DOC-003`、`DD-DOC-007` 均为 `completed`；验收要求是离线本地测试和 CI 均能拒绝故意植入的文档状态冲突，允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已重新读取本计划、执行清单、状态/证据约定、`CONTRIBUTING.md`、`GOVERNANCE.md`、ADR 规则和 `ci.yml`；该任务新增本地测试/CI 覆盖，不引入依赖、网络查询、命令执行、公开契约或外部状态改变。 |
+| 3 | 工作树含 14 个既有已修改文件和 17 组既有未跟踪的产品化文档/Issue Form/模板；暂存区为空。分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 4 | `origin` 为 `git@github.com:lliangcol/diffdossier.git`；相对本地 `origin/feature/productization-control-baseline` ahead/behind 为 `0/0`。本轮 GitHub API 只读查询的远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 5 | 本轮 GitHub CLI 只读查询列出 `v0.1.0-beta.3`（2026-07-27T12:39:48Z）、`.2` 和 `.1` 三个 Pre-release；列表不证明资产、哈希、attestation、安装或当前分支验证。 |
+| 6 | 相关工作流为 `.github/workflows/ci.yml` 的 `CI` 和 `release.yml` 的 `Release`。最近可见 CI [#30286989079](https://github.com/lliangcol/diffdossier/actions/runs/30286989079) 成功但绑定历史 `main` SHA `aa611755554711dd44fab388f488fd2867ed093e`；最近 Release [#30266531344](https://github.com/lliangcol/diffdossier/actions/runs/30266531344) 成功但绑定历史 beta.3 SHA `3c46e62740143b62293f1abf526a1e159084e522`。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。本任务不需要 GitHub 设置、Release、Provider、公开数据或 Git 交付；它只修改本地工作流文件和测试文件。 |
+| 8 | 本轮允许修改离线检查实现/fixture、`ci.yml` 的本地测试入口、计划状态/执行日志和本清单记录；验证 `go test`、`go vet`、`git diff --check` 及故意漂移失败。明确排除网络真相查询、GitHub 设置、Release、提交、推送、PR 与合并。 |
+
+结论：`ready`（仅限 DD-DOC-009 的本地离线漂移检查）。Go 1.25.12 正在被单一
+官方后台下载并将在安装后现场验证；在此之前不把任何 Go 测试记为通过。
+
+### 2026-07-28T14:04:18+08:00 — DD-DOC-010 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-DOC-010`，唯一依赖 `DD-DOC-009` 已完成；验收要求是覆盖 owner、ruleset、PVR、Release、required checks 和支持平台的人工复核清单及有效期，允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已复核计划、执行清单、状态/证据约定、CONTRIBUTING、GOVERNANCE、ADR 规则、治理审计、平台矩阵和 Release 清单；本轮只建立复核流程，不改变任何外部配置或公共契约。 |
+| 3 | 工作树含既有的产品化文档、模板、工作流和 `internal/doccheck` 未提交修改；暂存区为空。分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 4 | `origin` 为 `git@github.com:lliangcol/diffdossier.git`；相对本地 `origin/feature/productization-control-baseline` ahead/behind 为 `0/0`。本轮 GitHub API 只读查询的远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 5 | 本轮 GitHub CLI 只读查询列出 `v0.1.0-beta.3`（2026-07-27T12:39:48Z）、`.2` 和 `.1` 三个 Pre-release；这只证明查询时的列表可见，不验证资产、attestation、安装、当前分支或未来持续状态。 |
+| 6 | 相关工作流为 `CI` 与 `Release`。最近可见 CI [#30286989079](https://github.com/lliangcol/diffdossier/actions/runs/30286989079) 成功但绑定历史 `main` SHA `aa611755554711dd44fab388f488fd2867ed093e`；最近 Release [#30266531344](https://github.com/lliangcol/diffdossier/actions/runs/30266531344) 成功但绑定历史 beta.3 SHA `3c46e62740143b62293f1abf526a1e159084e522`。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。本任务不需要外部写；PVR、ruleset/required checks 或 Release 的改变仍需针对仓库、设置项、预期值和回滚方式的单独确认。 |
+| 8 | 本轮只允许新增人工复核清单及更新计划/基线记录；检查字段完整性、链接和 Markdown/diff。明确排除 GitHub 设置、Release、Provider、公开数据、暂存、提交、推送、PR 与合并。 |
+
+结论：`ready`（仅限 DD-DOC-010 的本地人工复核清单）。
+
+### 2026-07-28T14:06:52+08:00 — DD-REL-008 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-REL-008`，唯一依赖 `DD-REL-007` 已完成；验收要求为无公开 Release 的隔离演练，含故障注入、清理和恢复证据，允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已复核计划、执行清单、状态/证据约定、CONTRIBUTING、GOVERNANCE、ADR 规则、`release-process.md`、`next-beta-release-checklist.md`、releaseprep 实现/测试和 Release 工作流；候选模式不授权 tag、Release 或远端写入。 |
+| 3 | 工作树含既有产品化文档、模板、工作流和 `internal/doccheck` 未提交修改；暂存区为空。分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 4 | `origin` 为 `git@github.com:lliangcol/diffdossier.git`；相对本地 `origin/feature/productization-control-baseline` ahead/behind 为 `0/0`。本轮 GitHub API 只读查询的远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 5 | 本轮 GitHub CLI 只读查询列出 `v0.1.0-beta.3`、`.2` 和 `.1` 三个 Pre-release；现有版本不被重用、不创建新 tag，列表不构成候选资产或发布批准。 |
+| 6 | 相关工作流为 `CI` 与 `Release`。最近可见 CI #30286989079 和 Release #30266531344 均成功但绑定历史 SHA；它们不替代本次候选构建验证。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。本任务仅作临时本地文件和 Git worktree 操作；明确排除 GitHub 设置、tag、Release、push、PR、合并、Provider 和公开数据。 |
+| 8 | 本轮允许在系统临时目录创建/清理受控 detached worktree、预期失败的空输出目录和候选构建目录；使用 `releaseprep build --candidate`/`verify --smoke`。预期验证包括失败无半成品、清理后完整候选输出和无外部状态改变。 |
+
+结论：`ready`（仅限 DD-REL-008 的本地隔离演练）。
+
+### 2026-07-28T14:11:15+08:00 — DD-GOV-008 工作包
+
+| # | 结果 |
+|---|---|
+| 1 | 目标任务为 `DD-GOV-008`，唯一依赖 `DD-GOV-004` 已完成；验收要求是新贡献者可完成一次文档或测试贡献演练，允许开始。 |
+| 2 | 未发现 `AGENTS.md`。已复核计划、执行清单、状态/证据约定、CONTRIBUTING、GOVERNANCE、ADR 规则、Issue Forms、PR Template 和 beta compatibility；本轮只补充本地贡献文档，不改变稳定契约、依赖、Provider、Release 或外部设置。 |
+| 3 | 工作树含既有产品化文档、模板、工作流和 `internal/doccheck` 未提交修改；暂存区为空。分支为 `feature/productization-control-baseline`，HEAD 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 4 | `origin` 为 `git@github.com:lliangcol/diffdossier.git`；相对本地 `origin/feature/productization-control-baseline` ahead/behind 为 `0/0`。本轮 GitHub API 只读查询的远端同名分支 SHA 为 `d5097d1e2b2c9e8c6aa327919feb4a6fd9c4261b`。 |
+| 5 | 本轮 GitHub CLI 只读查询列出三个 beta Pre-release；不由此推断支持、安装、资产或发布批准。 |
+| 6 | 相关工作流为 `CI` 与 `Release`。最近可见 CI #30286989079 和 Release #30266531344 都是历史 SHA 成功记录，不能替代当前分支验证。 |
+| 7 | 本轮 GitHub API 只读查询显示 active 的 `Protect main` ruleset（ID `19772012`，target `branch`）。本任务无外部写；Issue/PR、ruleset、PVR 和 Release 操作均被明确排除。 |
+| 8 | 本轮仅更新 CONTRIBUTING、计划/基线记录，并在临时目录执行文档贡献路径演练；验证 Markdown、链接、所列命令和 diff。 |
+
+结论：`ready`（仅限 DD-GOV-008 的本地贡献指引）。

@@ -1,0 +1,15 @@
+name: Feature request
+description: Propose a narrowly scoped improvement without sensitive inputs.
+title: "feature: "
+labels: [feature]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include private source, repository paths, credentials, packets, results, or logs."
+  - type: textarea
+    id: problem
+    attributes: {label: Problem and proposed outcome}
+    validations: {required: true}
+  - type: textarea
+    id: boundary
+    attributes: {label: Security, compatibility, or authorization boundary}

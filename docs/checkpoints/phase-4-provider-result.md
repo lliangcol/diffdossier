@@ -1,4 +1,9 @@
 # Phase 4 Provider and Result checkpoint
+- Status: historical
+- Captured-at: 2026-07-26T19:56:20+08:00
+- Source-commit: 359004425c6637ce612b5a1917d47f8e70b04a47
+- Superseded-by: none
+- Current-state notice: Historical checkpoint — do not treat this document as current project status. Revalidate Provider capability, authorization, platform, and live-execution claims from their current evidence records.
 
 - Date: 2026-07-26
 - Scope: T4.1, T4.2, T4.3, and T4.6 implementation; T4.4/T4.5 manual-only evidence

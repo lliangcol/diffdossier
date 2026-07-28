@@ -1,6 +1,7 @@
 # Phase 0 platform compatibility spike
 
-Status: macOS/amd64 development evidence expanded; native platform matrix incomplete
+Status: historical local spike plus native CI/Release evidence for Linux amd64,
+Windows amd64, macOS amd64, and macOS arm64; no platform support tier assigned
 
 This spike tests the minimum assumptions needed before DiffDossier declares an operating-system support tier. It does not establish Tier 1 support by itself.
 
@@ -13,11 +14,25 @@ This spike tests the minimum assumptions needed before DiffDossier declares an o
 - cancellation of a direct child and a real grandchild through a Unix process group;
 - `CGO_ENABLED=0` cross-builds for planned Tier 1 and Tier 2 OS/architecture pairs.
 
+## Current CI and Release evidence
+
+The current repository evidence matrix is
+[`platform-evidence-matrix.md`](platform-evidence-matrix.md). It records native
+GitHub-hosted CI and Release jobs for Linux amd64, Windows amd64, macOS amd64,
+and macOS arm64, including their race tests and CLI/doctor or platform-spike
+checks. Those records are bound to their historical commits and runners; they
+are not evidence for the current branch, a minimum OS/Git version, an assigned
+support tier, or a downloaded-artifact installation.
+
+Linux arm64 and Windows arm64 currently have cross-build and beta artifact
+evidence only, not native execution or race evidence. The Release publish job
+ran `releaseprep verify --smoke` on its Linux host; that is not a four-platform
+download/install smoke.
+
 ## Deliberately not claimed
 
-- Native Windows Job Object runtime behavior, ACL verification, console behavior, long paths, or case-insensitive collision behavior. The Job Object implementation and amd64/arm64 test binaries cross-compile, but cross-compilation is not native evidence.
-- Native Linux XDG behavior or permissions.
-- Native macOS arm64 runtime behavior.
+- Native Windows Job Object runtime behavior, ACL verification, console behavior, long paths, or case-insensitive collision behavior. The Job Object implementation and amd64/arm64 test binaries cross-compile, but cross-compilation is not native evidence; CI evidence is currently limited to Windows amd64.
+- Native Linux arm64 XDG behavior or permissions.
 - Native cross-platform symlink/ACL semantics and Unicode normalization/case behavior. Local inventory fixtures do cover symlink, submodule, LFS, and invalid UTF-8 paths.
 - Any minimum supported OS, Git, or Go version.
 
@@ -60,7 +75,7 @@ With `CGO_ENABLED=0`, the same source cross-built for:
 - `linux/amd64` and `linux/arm64`;
 - `windows/amd64` and `windows/arm64`.
 
-These cross-builds are compile evidence only. Windows and Linux native runtime checks, macOS arm64 native execution, process-tree semantics, and native permission models remain unverified.
+These cross-builds are compile evidence only. Windows and Linux arm64 native runtime checks, process-tree semantics, and native permission models remain unverified. Native CI exists for Linux amd64, Windows amd64, macOS amd64, and macOS arm64, but it does not close the semantic gaps listed above.
 
 The module declares Go 1.25.0 as its language baseline because Go 1.26 generates new modules with that baseline and Go 1.25 remains supported under the official two-newer-releases policy. The current local runtime evidence is still Go 1.26.0 only; a native Go 1.25 test remains pending.
 

@@ -1,4 +1,9 @@
 # Phase 0 local bootstrap checkpoint
+- Status: historical
+- Captured-at: 2026-07-26T17:59:12+08:00
+- Source-commit: none
+- Superseded-by: none
+- Current-state notice: Historical checkpoint — do not treat this document as current project status. This pre-commit bootstrap record preserves its original local and authorization boundary.
 
 This is a historical checkpoint captured before the first implementation commit.
 

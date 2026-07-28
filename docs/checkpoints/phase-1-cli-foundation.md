@@ -1,4 +1,9 @@
 # Phase 1 CLI foundation checkpoint
+- Status: historical
+- Captured-at: 2026-07-26T17:59:12+08:00
+- Source-commit: 217875ba55df10be4d49eee934236b09012cc9c9
+- Superseded-by: none
+- Current-state notice: Historical checkpoint — do not treat this document as current project status. Revalidate CLI, toolchain, platform, CI, and Release claims from their current evidence records.
 
 - Date: 2026-07-26
 - Scope: T1.1 local implementation only

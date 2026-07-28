@@ -1,0 +1,16 @@
+name: Bug report
+description: Report a reproducible problem using synthetic or public data only.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include private source, repository paths, credentials, packets, results, or logs."
+  - type: textarea
+    id: reproduction
+    attributes: {label: Reproduction, description: Use a synthetic or public example.}
+    validations: {required: true}
+  - type: textarea
+    id: expected
+    attributes: {label: Expected and actual behavior}
+    validations: {required: true}
